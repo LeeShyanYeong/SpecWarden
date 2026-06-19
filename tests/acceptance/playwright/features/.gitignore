@@ -1,0 +1,4 @@
+# Everything in this folder is generated at build time from specs/ — do not commit.
+# (Mirrors tests/acceptance/reqnroll/Features/.gitignore.)
+*
+!.gitignore

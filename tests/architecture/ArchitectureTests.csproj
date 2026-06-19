@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Executable guard for the architecture standards in skills/arch-check/SKILL.md.
+    Each rule maps 1:1 to a [Fact], so the standards are enforced by `dotnet test`
+    (and CI) instead of relying on a reviewer reading the skill. This is the
+    "structure" runner — the analog of the acceptance behaviour runners, applied
+    to repository/code shape. Each standard stays dormant until the matching code
+    exists (ARCH-1/2/3 activate once src/backend or src/frontend appears; SPEC-1
+    guards specs/), so the lane is green on a bare template.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+</Project>

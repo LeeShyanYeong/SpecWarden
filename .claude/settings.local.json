@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ln -s ../../skills/brainstorm-task brainstorm-task)",
+      "Bash(dotnet sln *)",
+      "Bash(dotnet add *)",
+      "Bash(dotnet test *)",
+      "Bash(git check-ignore *)",
+      "Bash(git add *)"
+    ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "DIR=\"${CLAUDE_PROJECT_DIR:-.}\"; git -C \"$DIR\" status --porcelain -- src scripts specs tests 2>/dev/null | grep -q . || exit 0; \"$DIR/scripts/pipeline.sh\" || exit 2",
+            "asyncRewake": true,
+            "timeout": 1800,
+            "statusMessage": "src/scripts/specs/tests changed — running full pipeline.sh in background…",
+            "rewakeSummary": "pipeline.sh failed after src/test changes",
+            "rewakeMessage": "The end-of-turn pipeline (scripts/pipeline.sh) failed after changes under src/, scripts/, specs/, or tests/. Output follows:"
+          }
+        ]
+      }
+    ]
+  }
+}

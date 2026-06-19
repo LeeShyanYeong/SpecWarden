@@ -1,0 +1,26 @@
+# OS cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*~
+
+# Secrets & local env
+.env
+.env.*
+!.env.example
+
+# Note: .claude/skills/ contains symlinks to the canonical skills/ dir.
+# These symlinks ARE committed so Claude Code can auto-discover the skills.
+
+# Build output — .NET (matches at any depth)
+[Bb]in/
+[Oo]bj/
+
+# Build output — Angular / Node (for the frontend)
+node_modules/
+dist/
