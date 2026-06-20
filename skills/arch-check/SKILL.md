@@ -6,7 +6,7 @@ description: >-
   our architecture?", "arch check", "are the standards met?", and as part of
   tdd-task (during refactor) and code-review. Holds the standing list of
   architecture rules and how to apply them.
-version: 1.0.0
+version: 1.1.0
 ---
 
 # Architecture Check
@@ -33,6 +33,22 @@ build — the same guarantee the Reqnroll/Playwright lanes give for behaviour.
 - The judgment-only parts of ARCH-4 (single responsibility, no duplication) are
   not mechanically checkable and remain a manual concern in the Steps below.
 
+## Where standards come from (ADRs)
+
+The architecturally-significant decisions behind these standards are recorded as
+**Architecture Decision Records** in `docs/adr/`: that folder is the *why* (rationale),
+this file is the *what* (the standing rules), and `tests/architecture/` is the
+*enforcement*. An ADR on its own binds nothing — a decision becomes a guarded constraint
+only when it lands here as an `ARCH-n` standard with a matching `[Fact]`.
+
+- When an ADR makes a **binding** decision about how production code must be shaped,
+  promote it to a new `ARCH-n` standard (Rule + Check) and add its test — keeping the
+  `ARCH-n ⇄ [Fact]` mapping 1:1, exactly as for any other standard.
+- Leave **infrastructure / tooling** ADRs (container runtime, CI image, …) in `docs/adr/`
+  only; they are enforced by their scripts, not by an architecture standard.
+- Cross-link the two: cite the ADR id in the standard's **Rationale** line, and name the
+  standard in the ADR's **Enforcement** field. See [docs/adr/](../../docs/adr/).
+
 ## When it applies
 
 Applies to **production code that implements behaviour**. Exempt (use judgement):
@@ -53,6 +69,8 @@ Each rule has an **id**, the **rule**, and a **check** (how to confirm it holds)
   host with ad-hoc local setup.
 - **Check:** The executable's directory has a `Dockerfile`; the image builds;
   the entrypoint starts the process. No undocumented host-only dependencies.
+- **Rationale:** The runtime that builds and runs these containers is chosen in
+  [ADR-001](../../docs/adr/ADR-001-container-runtime.md) (Podman, with a `docker` fallback).
 
 ### ARCH-2 — Backend is ASP.NET Core (.NET)
 
@@ -82,7 +100,9 @@ Each rule has an **id**, the **rule**, and a **check** (how to confirm it holds)
 <!--
 Add new standards below as ARCH-5, ARCH-6, … Keep each one in the same shape:
 a one-line Rule and a concrete, observable Check. The more checkable the Check,
-the easier it later becomes a hook (see Notes).
+the easier it later becomes a hook (see Notes). If the standard codifies an ADR
+decision, add a **Rationale** line linking the ADR and set that ADR's Enforcement
+field to this standard.
 -->
 
 ## Steps

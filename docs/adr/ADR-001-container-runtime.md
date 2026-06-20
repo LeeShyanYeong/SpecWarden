@@ -42,3 +42,13 @@ Use **Podman** as the primary container runtime.
   in `stage-deploy.sh` covers it transparently.
 - Any future `docker-compose` usage would need to switch to `podman compose` or
   `podman-compose` (a separate install).
+
+## Enforcement
+
+Infrastructure decision — enforced by scripts, not by an architecture standard:
+
+- `scripts/stage-deploy.sh` resolves `podman` first, falling back to `docker`.
+- `scripts/bootstrap.sh` installs Podman via `apt` when no runtime is found.
+
+Relates to **ARCH-1** (executables are containerized) in `skills/arch-check`, which requires the
+container definition this runtime builds and runs.

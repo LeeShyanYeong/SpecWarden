@@ -6,7 +6,7 @@ description: >-
   "write the requirements", "what should this do?". Brainstorms with the user
   and persists a Cucumber-compatible spec to specs/<feature>.feature — it does
   NOT write code (use atdd-task / tdd-task).
-version: 1.1.0
+version: 1.2.0
 ---
 
 # Spec Task
@@ -63,8 +63,13 @@ units beneath). Capture *what* and *why* here; leave *how* and *steps* to the im
      observable condition). Skip attributes that don't apply; never invent targets — log unknowns
      as open questions. `@nfr` scenarios can be excluded from the standard test run and wired to
      custom steps later.
-5. **Capture gaps.** Record *Out of scope* items and *Open questions* as `#` comments in the file
-   header. These are not Gherkin and will not be parsed by the runner.
+5. **Capture gaps and applicable decisions.** Record *Out of scope* items and *Open questions* as
+   `#` comments in the file header (these are not Gherkin and will not be parsed by the runner).
+   Then scan `docs/adr/` for any Architecture Decision Record that constrains this feature's
+   **behaviour** — e.g. a chosen data format, concurrency model, or auth scheme. Cite each
+   applicable ADR by id in an *Architecture decisions* header comment so the constraint rides along
+   to `atdd-task` (which reads this file). Skip ADRs that only affect infrastructure/tooling — most
+   won't apply; if none do, omit the block.
 6. **Persist** to `specs/<feature>.feature` (`lowercase-kebab-case` filename), creating the
    `specs/` folder if needed, in this exact format:
 
@@ -76,6 +81,9 @@ units beneath). Capture *what* and *why* here; leave *how* and *steps* to the im
 #
 # Open questions:
 #   - <unresolved question or assumption to confirm>
+#
+# Architecture decisions (from docs/adr/ — include only ADRs that constrain this feature):
+#   - ADR-NNN: <decision this spec must honour>
 
 Feature: <feature title>
   As a <actor>
