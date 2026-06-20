@@ -45,6 +45,10 @@ Guard lanes:
 src/
   backend/    ASP.NET Core solution (C#) — API + services
   frontend/   Angular workspace (TypeScript)
+stories/      User stories (written by user-story-task) — planning artifacts, NOT
+              runner-guarded. Narrative + acceptance criteria (intent only);
+              decomposed by brainstorm-task, specified by spec-task (which owns
+              specification by example).
 specs/        Feature files — declarative SSOT (written by spec-task). One story
               per vertical slice; each scenario routed by its level tag:
               @api → Reqnroll, @e2e + @component → Playwright.
@@ -59,7 +63,7 @@ tests/
                 sync-specs.mjs; bddgen codegens the tests. Per scenario the level tag
                 binds a protocol driver (dsl/), live or stubbed.
 skills/       Reusable agent skills (see Skills below)
-TODO.md       Persistent task list (planned and executed by the skills below)
+TODO.md       Persistent task list (one block per task)
 ```
 
 Each SSOT artifact is **runner-guarded**: a runner consumes it on every build and
@@ -73,11 +77,10 @@ for how each lane is wired as a pipeline blocker.
 
 | Skill          | File                                                          | Use when…                                          |
 | -------------- | ------------------------------------------------------------ | -------------------------------------------------- |
+| `user-story-task` | [skills/user-story-task/SKILL.md](skills/user-story-task/SKILL.md) | Capturing a raw need as a user story (`stories/<name>.md`) before speccing. |
 | `brainstorm-task` | [skills/brainstorm-task/SKILL.md](skills/brainstorm-task/SKILL.md) | Splitting a too-large idea into one stub feature per feature. |
 | `spec-task`    | [skills/spec-task/SKILL.md](skills/spec-task/SKILL.md)        | Turning a raw idea into a specification by example. |
 | `code-review`  | [skills/code-review/SKILL.md](skills/code-review/SKILL.md)    | Reviewing a diff or PR before it merges.           |
-| `plan-task`    | [skills/plan-task/SKILL.md](skills/plan-task/SKILL.md)        | Breaking a goal into steps and adding it to `TODO.md`. |
-| `execute-task` | [skills/execute-task/SKILL.md](skills/execute-task/SKILL.md)  | Executing a task from `TODO.md` and checking it off. |
 | `tdd-task`     | [skills/tdd-task/SKILL.md](skills/tdd-task/SKILL.md)          | Implementing a unit of code test-first (red-green-refactor). |
 | `atdd-task`    | [skills/atdd-task/SKILL.md](skills/atdd-task/SKILL.md)        | Implementing Gherkin scenarios from a `.feature` file (acceptance-level red-green-refactor). |
 | `arch-check`   | [skills/arch-check/SKILL.md](skills/arch-check/SKILL.md)      | Confirming code meets the architecture standards.  |

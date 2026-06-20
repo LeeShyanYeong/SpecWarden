@@ -5,7 +5,7 @@ description: >-
   planning or coding. Triggers on: "spec this out", "brainstorm a feature",
   "write the requirements", "what should this do?". Brainstorms with the user
   and persists a Cucumber-compatible spec to specs/<feature>.feature — it does
-  NOT plan steps (use plan-task) or write code.
+  NOT write code (use atdd-task / tdd-task).
 version: 1.1.0
 ---
 
@@ -18,8 +18,9 @@ The output is a valid **Gherkin feature file**: Cucumber (or any BDD runner) wil
 immediately. Unimplemented step definitions cause the build to fail, giving you a free
 "spec not yet built" enforcement gate.
 
-This is the speccing stage of the pipeline: `brainstorm-task` (large ideas only) → `spec-task` →
-`plan-task` → `execute-task`. Capture *what* and *why* here; leave *how* and *steps* to `plan-task`.
+This is the speccing stage of the pipeline: `user-story-task` (optional) → `brainstorm-task` (large
+ideas only) → `spec-task` → implementation (`atdd-task` for acceptance scenarios, `tdd-task` for the
+units beneath). Capture *what* and *why* here; leave *how* and *steps* to the implementation skills.
 
 ## Inputs
 
@@ -114,18 +115,17 @@ Feature: <feature title>
     Then <response with measurable target>
 ```
 
-7. **Report** the spec path and a one-line summary. Offer `plan-task` as the next step. Do not plan
-   or implement here.
+7. **Report** the spec path and a one-line summary. Offer `atdd-task` as the next step. Do not
+   implement here.
 
 ## Notes
 
-- Spec only — no step breakdown and no code. Step decomposition is `plan-task`'s job; splitting a
-  large idea into separate features is `brainstorm-task`'s job. This skill writes scenarios for
-  exactly one feature.
+- Spec only — no code. Splitting a large idea into separate features is `brainstorm-task`'s job.
+  This skill writes scenarios for exactly one feature.
 - Never author a `@unspecified` scenario or a `# Status: Stub` header yourself — that stub device
   belongs to `brainstorm-task`. A spec this skill produces is always `# Status: Draft` with real,
   bound scenarios; the **SPEC-1** architecture guard enforces this.
-- `plan-task` reads `specs/<feature>.feature` as its goal input.
+- `atdd-task` reads `specs/<feature>.feature` to implement its `@api` scenarios.
 - Examples must be concrete and testable. "Fast", "secure", "scalable" are not requirements until
   they have a number or an observable condition.
 - One feature per file under `specs/`, mirroring how `TODO.md` holds one block per task.

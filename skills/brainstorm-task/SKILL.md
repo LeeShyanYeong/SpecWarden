@@ -5,7 +5,7 @@ description: >-
   speccing. Triggers on: "this is a big idea", "break this into features",
   "what features does this need?", or when spec-task's size gate hands off here.
   Decomposes the idea into one stub .feature file per feature — it does NOT write
-  scenarios (use spec-task) or plan steps (use plan-task).
+  scenarios (use spec-task).
 version: 1.0.0
 ---
 
@@ -17,14 +17,15 @@ Each stub is self-guarding: the architecture lane's **SPEC-1** guard
 (`tests/architecture/SpecHygieneStandards.cs`) fails the build while any spec is a stub, so the
 backlog can never silently drift — and no stub can reach a green build until `spec-task` fills it in.
 
-This is the optional first stage of the pipeline, reached only for large ideas:
-`brainstorm-task` → `spec-task` (×N) → `plan-task` → `execute-task`. Decide *how many features* here;
-leave *what each one does* to `spec-task`.
+This is the optional decomposition stage of the pipeline, reached only for large ideas:
+`user-story-task` → `brainstorm-task` → `spec-task` (×N). Decide *how many features* here; leave
+*what each one does* to `spec-task`.
 
 ## Inputs
 
-- A large idea — one that spans multiple actors or capabilities that could ship independently. Often
-  handed off from `spec-task`'s size gate.
+- A large idea — one that spans multiple actors or capabilities that could ship independently —
+  given **either** as inline text **or** as a path to a story file (`stories/<name>.md` from
+  `user-story-task`). Often handed off from `spec-task`'s size gate.
 
 ## Steps
 
@@ -40,9 +41,9 @@ leave *what each one does* to `spec-task`.
    the next-free filename, in this exact format:
 
 ```gherkin
-# Status: Stub | Author: <name> | Created: <YYYY-MM-DD>
+# Status: Stub | Story: <name> | Source: stories/<name>.md | Author: <name> | Created: <YYYY-MM-DD>
 #
-# Carved out of "<parent idea>" on <YYYY-MM-DD>.
+# Carved out of "<parent idea or story title>" on <YYYY-MM-DD>.
 # Siblings: <other feature names from this brainstorm>.
 # Seed: As a <actor>, I want <capability> so that <value>.
 # Not yet specified — run spec-task to fill in scenarios.
@@ -60,7 +61,11 @@ Feature: <feature title>
 
 ## Notes
 
-- Decomposition only — no scenarios, no steps, no code. Scenarios are `spec-task`'s job.
+- Decomposition only — no scenarios and no code. Scenarios are `spec-task`'s job.
+- **Story / Source fields are file-mode only.** When the input is a story file from
+  `user-story-task`, stamp `# Story: <name> | Source: stories/<name>.md` onto every stub so the epic
+  is queryable with `grep "# Story: <name>" specs/`. When the input is plain inline text, omit both
+  fields — that is the existing behavior, unchanged.
 - One stub per feature, mirroring "one feature per file" in `spec-task` and "one block per task" in
   `TODO.md`. There is no separate index file: `grep "# Status: Stub" specs/` is the backlog.
 - A stub carries no level tag, so neither acceptance lane runs it; the architecture lane's **SPEC-1**
