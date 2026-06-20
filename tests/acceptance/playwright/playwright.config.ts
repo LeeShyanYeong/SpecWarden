@@ -23,8 +23,10 @@ export default defineConfig({
     ? [['list'], ['junit', { outputFile: 'test-results/results.xml' }]]
     : 'list',
   use: {
-    // The Angular app under test. Defaults to the Angular dev-server port.
-    baseURL: process.env.FRONTEND_BASE_URL ?? 'http://localhost:4200',
+    // The Angular app under test. The frontend is served by the API itself (one
+    // container, one port), so it defaults to the same origin as the API rather
+    // than a separate `ng serve` on 4200.
+    baseURL: process.env.FRONTEND_BASE_URL ?? 'http://localhost:8080',
     trace: 'on-first-retry',
   },
   projects: [

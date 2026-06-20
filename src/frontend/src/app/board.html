@@ -1,0 +1,12 @@
+<header class="toolbar">
+  <button type="button" class="save" data-testid="save" (click)="save()">Save</button>
+  @if (store.error(); as error) {
+    <span class="error" role="alert" data-testid="error">{{ error }}</span>
+  }
+</header>
+
+<main class="canvas" data-testid="canvas" (dblclick)="onCanvasDblClick($event)">
+  @for (note of store.notes(); track note.id) {
+    <app-sticky-note [note]="note" />
+  }
+</main>

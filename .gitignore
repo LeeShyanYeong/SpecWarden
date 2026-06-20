@@ -24,3 +24,6 @@ desktop.ini
 # Build output — Angular / Node (for the frontend)
 node_modules/
 dist/
+
+# Generated: the Angular build is bundled into the API at compile time (stage-compile.sh)
+src/backend/StickyNotes.Api/wwwroot/

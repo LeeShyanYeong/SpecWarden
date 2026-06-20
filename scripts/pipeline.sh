@@ -4,11 +4,15 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
+# Activate tools installed by scripts/bootstrap.sh so stage scripts inherit them.
+[ -x "${HOME}/.dotnet/dotnet" ] && export DOTNET_ROOT="${HOME}/.dotnet" && export PATH="${DOTNET_ROOT}:${DOTNET_ROOT}/tools:${PATH}"
+[ -f "${HOME}/.nvm/nvm.sh" ] && source "${HOME}/.nvm/nvm.sh" && nvm use "$(cat "$REPO_ROOT/.nvmrc")" &>/dev/null || true
+
 
 # region Configuration
 
 export PIPELINE_MODE="${PIPELINE_MODE:-local}"    # local | azure
-export DEPLOY_ENABLED="${DEPLOY_ENABLED:-true}"  # true  | false
+export DEPLOY_ENABLED="${DEPLOY_ENABLED:-true}"  # true  | false — requires Docker/Podman
 export CLEANUP_AFTER="${CLEANUP_AFTER:-false}"   # true  | false
 
 STAGE_COMPILE=$SCRIPT_DIR/stage-compile.sh
@@ -88,9 +92,9 @@ printf "${CYAN}==========================================${RESET}\n"
 run_stage_if "$HAS_COMPILE" "Compile"  $STAGE_COMPILE
 run_stage_if "$HAS_COMPILE" "UnitTest" $STAGE_TEST
 run_stage    "Architecture" $STAGE_ARCH
-run_stage_if $DEPLOY_ENABLED "Deploy"  $STAGE_DEPLOY
-run_stage    "Cucumber"     $STAGE_CUCUMBER
-run_stage    "Playwright"   $STAGE_PLAYWRIGHT
+run_stage_if $DEPLOY_ENABLED "Deploy"      $STAGE_DEPLOY
+run_stage                    "Cucumber"    $STAGE_CUCUMBER
+run_stage                    "Playwright"  $STAGE_PLAYWRIGHT
 run_stage_if $CLEANUP_AFTER  "Cleanup" $STAGE_CLEANUP
 
 printf "\n${CYAN}==========================================${RESET}\n"

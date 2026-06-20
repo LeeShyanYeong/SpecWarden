@@ -84,6 +84,7 @@ for how each lane is wired as a pipeline blocker.
 | `tdd-task`     | [skills/tdd-task/SKILL.md](skills/tdd-task/SKILL.md)          | Implementing a unit of code test-first (red-green-refactor). |
 | `atdd-task`    | [skills/atdd-task/SKILL.md](skills/atdd-task/SKILL.md)        | Implementing Gherkin scenarios from a `.feature` file (acceptance-level red-green-refactor). |
 | `arch-check`   | [skills/arch-check/SKILL.md](skills/arch-check/SKILL.md)      | Confirming code meets the architecture standards.  |
+| `bootstrap`    | [skills/bootstrap/SKILL.md](skills/bootstrap/SKILL.md)        | Setting up a fresh clone or fixing missing/wrong-version system deps. |
 
 ## Implementation policy
 

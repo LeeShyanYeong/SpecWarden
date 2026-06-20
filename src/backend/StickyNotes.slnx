@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="StickyNotes.Api/StickyNotes.Api.csproj" />
+  <Project Path="StickyNotes.Tests/StickyNotes.Tests.csproj" />
+</Solution>

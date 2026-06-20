@@ -38,6 +38,11 @@ if [ ! -d "$REPO_ROOT/src/frontend" ]; then
   exit 0
 fi
 
+# The Angular app is bundled into and served by the API container (one port), so
+# both the UI and the REST calls target the deployed API. No separate ng serve.
+export FRONTEND_BASE_URL="${FRONTEND_BASE_URL:-http://localhost:8080}"
+export API_BASE_URL="${API_BASE_URL:-http://localhost:8080}"
+
 echo "[playwright] Installing browsers and running @e2e + @component specs..."
 # CI installs OS-level browser dependencies too (requires root); locally we assume
 # the developer already has them (npx playwright install-deps, run once with sudo).

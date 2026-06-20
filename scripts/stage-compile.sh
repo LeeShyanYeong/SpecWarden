@@ -23,6 +23,19 @@ if [ -d "src/frontend" ]; then
   # Use the locally-installed Angular CLI (devDependency) rather than a global `ng`.
   ( cd src/frontend && npm ci && npx ng build --configuration production )
   echo "[compile] Frontend build succeeded."
+
+  # Bundle the built SPA into the API so the two ship as one container on a single
+  # port: dotnet publish (Web SDK) bakes wwwroot into the published image, and the
+  # API serves it via UseStaticFiles + MapFallbackToFile (see Program.cs).
+  api_dir="src/backend/StickyNotes.Api"
+  spa_build="src/frontend/dist/frontend/browser"
+  if [ -d "$api_dir" ] && [ -d "$spa_build" ]; then
+    echo "[compile] Bundling SPA into $api_dir/wwwroot ..."
+    rm -rf "$api_dir/wwwroot"
+    mkdir -p "$api_dir/wwwroot"
+    cp -R "$spa_build/." "$api_dir/wwwroot/"
+    echo "[compile] SPA bundled into the API."
+  fi
 else
   echo "[compile] src/frontend/ not found — skipping Angular build."
 fi

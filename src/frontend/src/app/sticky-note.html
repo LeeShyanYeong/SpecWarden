@@ -1,0 +1,19 @@
+@if (editing()) {
+  <textarea
+    class="note-input"
+    [attr.maxlength]="maxLength"
+    [value]="note().text"
+    (input)="onInput($any($event.target).value)"
+    (blur)="stopEdit()"
+  ></textarea>
+} @else {
+  <div class="note-body">{{ note().text }}</div>
+}
+
+<button
+  type="button"
+  class="note-delete"
+  aria-label="Delete note"
+  (click)="remove($event)"
+  (mousedown)="$event.stopPropagation()"
+>×</button>

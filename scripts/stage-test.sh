@@ -28,7 +28,7 @@ fi
 if [ -d "src/frontend" ]; then
   echo "[test] Running frontend unit tests..."
   # Use the locally-installed Angular CLI (devDependency) rather than a global `ng`.
-  ( cd src/frontend && npx ng test --watch=false --browsers=ChromeHeadless )
+  ( cd src/frontend && npx ng test --watch=false )
   echo "[test] Frontend tests passed."
 else
   echo "[test] src/frontend/ not found — skipping Angular tests."
