@@ -70,6 +70,40 @@ Then(/^reaching a protected page again requires signing in$/, async ({ auth }) =
   await expect(auth.signInScreen).toBeVisible();
 });
 
+// ----- Post-auth navigation (@component) -----
+
+When(/^the user submits a valid username and password$/, async ({ auth }) => {
+  await auth.submitSignIn();
+});
+
+Given(/^the backend will accept the registration$/, async () => {
+  // no-op: openSignUp() already installed stubs; default stub accepts registration
+});
+
+When(/^the user submits a valid new username and password$/, async ({ auth }) => {
+  await auth.submitSignUp('newcomer', 'validpass8');
+});
+
+Then(/^the main page is shown$/, async ({ auth }) => {
+  await expect(auth.boardScreen).toBeVisible();
+});
+
+When(/^the user navigates to the sign-in screen$/, async ({ auth }) => {
+  await auth.gotoSignIn();
+});
+
+Then(/^the sign-in screen is not shown$/, async ({ auth }) => {
+  await expect(auth.signInScreen).not.toBeVisible();
+});
+
+When(/^the user navigates to the sign-up screen$/, async ({ auth }) => {
+  await auth.gotoSignUp();
+});
+
+Then(/^the sign-up screen is not shown$/, async ({ auth }) => {
+  await expect(auth.signUpScreen).not.toBeVisible();
+});
+
 // ----- Real auth round trip (@e2e) -----
 
 Given(/^the app is open at the sign-in screen$/, async ({ auth }) => {
@@ -85,5 +119,5 @@ When(/^the user signs in again with the same credentials$/, async ({ auth }) => 
 });
 
 Then(/^the user is signed in and reaches the app$/, async ({ auth }) => {
-  await expect(auth.accountScreen).toBeVisible();
+  await expect(auth.boardScreen).toBeVisible();
 });

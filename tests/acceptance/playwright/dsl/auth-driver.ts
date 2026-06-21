@@ -50,6 +50,14 @@ export class AuthDriver {
         await route.continue();
       }
     });
+    // Stub the board so @component scenarios that land on '/' after auth can render.
+    await this.page.route('**/api/board', async (route) => {
+      if (route.request().method() === 'GET') {
+        await route.fulfill({ json: { notes: [] } });
+      } else {
+        await route.continue();
+      }
+    });
   }
 
   // ----- navigation / state -----
@@ -84,6 +92,16 @@ export class AuthDriver {
     await expect(this.signUpScreen).toBeVisible();
   }
 
+  /** Navigate to /signin without reinstalling stubs (stubs already in place). */
+  async gotoSignIn(): Promise<void> {
+    await this.page.goto('/signin');
+  }
+
+  /** Navigate to /signup without reinstalling stubs (stubs already in place). */
+  async gotoSignUp(): Promise<void> {
+    await this.page.goto('/signup');
+  }
+
   async gotoProtectedPage(): Promise<void> {
     await this.page.goto('/account');
   }
@@ -110,12 +128,12 @@ export class AuthDriver {
     await this.page.goto('/signup');
     await expect(this.signUpScreen).toBeVisible();
     await this.submitSignUp(this.username, this.password);
-    await expect(this.accountScreen).toBeVisible();
+    // sign-up now lands on the board ('/'); assertion is in the step definition
   }
 
   async signInWithSameCredentials(): Promise<void> {
     await this.submitSignIn(this.username, this.password);
-    await expect(this.accountScreen).toBeVisible();
+    // sign-in lands on the board ('/'); assertion is in the step definition
   }
 
   private async fillCredentials(username: string, password: string): Promise<void> {
@@ -139,5 +157,9 @@ export class AuthDriver {
 
   get error(): Locator {
     return this.page.getByTestId('auth-error');
+  }
+
+  get boardScreen(): Locator {
+    return this.page.getByTestId('canvas');
   }
 }

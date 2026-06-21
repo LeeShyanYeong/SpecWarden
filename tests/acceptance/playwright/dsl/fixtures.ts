@@ -13,7 +13,10 @@ type StubNote = { id?: string; text: string; x?: number; y?: number; z?: number 
  */
 class BoardDriver {
   current: Locator | null = null;
+  /** Confirm/prompt dialogs fired — used to assert on CanDeactivate guard prompts. */
   readonly dialogs: string[] = [];
+  /** Number of beforeunload dialogs fired — used to assert on browser-level unload warnings. */
+  beforeunloadCount = 0;
 
   private saved: StubNote[] = [];
   private rejectSave = false;
@@ -99,17 +102,31 @@ class BoardDriver {
 
   private registerDialogCapture(): void {
     this.page.on('dialog', (d) => {
-      this.dialogs.push(d.message());
-      void d.dismiss();
+      if (d.type() === 'beforeunload') {
+        // Count browser-level unload warnings separately; accept so navigation
+        // (reload, tab-close simulation, location.assign) can proceed.
+        this.beforeunloadCount++;
+        void d.accept();
+      } else {
+        // Confirm/prompt dialogs (e.g. window.confirm from CanDeactivate guard)
+        // are captured and dismissed so navigation is blocked — proving the guard fired.
+        this.dialogs.push(d.message());
+        void d.dismiss();
+      }
     });
   }
 
   private async installBoardStub(): Promise<void> {
+    // Stub logout so @component scenarios don't need a live auth backend.
+    await this.page.route('**/api/auth/logout', async (route) => {
+      await route.fulfill({ json: {} });
+    });
     await this.page.route('**/api/board', async (route) => {
       const req = route.request();
       if (req.method() === 'GET') {
         await route.fulfill({ json: { notes: this.saved } });
       } else if (req.method() === 'PUT') {
+        this._saveCalls++;
         if (this.rejectUnauthenticated) {
           await route.fulfill({ status: 401, json: { error: 'authentication required' } });
         } else if (this.rejectSave) {
@@ -241,6 +258,78 @@ class BoardDriver {
     await this.page.getByTestId('save').click();
     await put;
   }
+
+  // ----- toolbar UX (board-toolbar-ux) -----
+
+  /** @component: open clean board (load sets isDirty=false). */
+  async openClean(): Promise<void> {
+    await this.open();
+  }
+
+  /** @component: open board with pre-loaded stub notes (isDirty=false after load). */
+  async openWithLoadedNotes(notes: StubNote[]): Promise<void> {
+    this.setSavedBoard(notes);
+    this.registerDialogCapture();
+    await this.installBoardStub();
+    await this.seedSession();
+    await this.page.goto('/');
+    await expect(this.canvas).toBeVisible();
+  }
+
+  /** @component: open board then create an unsaved note (isDirty=true). */
+  async openWithUnsavedChanges(): Promise<void> {
+    await this.open();
+    await this.createSettledNote(200, 150, 'Dirty note');
+  }
+
+  /**
+   * @component: install stubs without navigating — call this BEFORE a sign-in
+   * redirect lands on the board so the board GET is stubbed before it fires.
+   */
+  async prestub(): Promise<void> {
+    if (!this.stubbed) return;
+    this.registerDialogCapture();
+    await this.installBoardStub();
+  }
+
+  /** @component: click Sign Out to reveal the unsaved-changes dialog. Assumes the board is already open with unsaved changes. */
+  async openSignOutDialog(): Promise<void> {
+    await this.signOutButton.click();
+    await expect(this.unsavedDialog).toBeVisible();
+  }
+
+  // ----- toolbar locators -----
+
+  get signOutButton(): import('@playwright/test').Locator {
+    return this.page.getByTestId('sign-out');
+  }
+
+  get savedToast(): import('@playwright/test').Locator {
+    return this.page.getByTestId('saved-toast');
+  }
+
+  get unsavedDialog(): import('@playwright/test').Locator {
+    return this.page.getByTestId('unsaved-dialog');
+  }
+
+  get saveAndSignOutButton(): import('@playwright/test').Locator {
+    return this.page.getByTestId('save-and-sign-out');
+  }
+
+  get discardAndSignOutButton(): import('@playwright/test').Locator {
+    return this.page.getByTestId('discard-and-sign-out');
+  }
+
+  get cancelSignOutButton(): import('@playwright/test').Locator {
+    return this.page.getByTestId('cancel-sign-out');
+  }
+
+  /** Number of PUT /api/board calls intercepted in @component mode. */
+  get saveCalls(): number {
+    return this._saveCalls;
+  }
+
+  private _saveCalls = 0;
 
   async reload(): Promise<void> {
     await this.page.reload();

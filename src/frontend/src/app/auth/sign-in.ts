@@ -38,7 +38,7 @@ export class SignIn {
     this.error.set('');
     try {
       await this.auth.login(this.usernameInput, this.passwordInput);
-      await this.router.navigate(['/account']);
+      await this.router.navigate(['/']);
     } catch {
       this.error.set('invalid username or password');
     }

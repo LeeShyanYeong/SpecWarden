@@ -42,7 +42,7 @@ export class SignUp {
     }
     try {
       await this.auth.register(this.usernameInput, this.passwordInput);
-      await this.router.navigate(['/account']);
+      await this.router.navigate(['/']);
     } catch {
       this.error.set('That username is not available.');
     }

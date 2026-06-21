@@ -7,6 +7,11 @@
 #   - Username: case-INSENSITIVE, 3–30 chars, [a-z0-9_-] only ("Lee" == "lee").
 #   - Inactivity timeout: 30 minutes (idle, sliding window).
 #   - Failed sign-in returns one generic "invalid username or password" (no user enumeration).
+#   - Post-auth landing: BOTH sign-up and sign-in land on the main page — the board at the
+#     root route '/'. This CHANGES today's sign-up (src/frontend/src/app/auth/sign-up.ts),
+#     which navigates to /account: sign-up must now land on '/' like sign-in already does.
+#     The destination is ALWAYS '/' — no return-URL / deep link is honoured. An
+#     already-signed-in user who opens the sign-in or sign-up screen is redirected to '/'.
 #
 # Out of scope (this feature is authentication only):
 #   - Per-user BOARD isolation, owner-scoped save/load, and retiring the shared global
@@ -157,15 +162,46 @@ Feature: User authentication
     Then the sign-in screen is shown
     And reaching a protected page again requires signing in
 
+  # ----- Post-auth navigation: where a successful auth lands (@component) -----
+
+  @component
+  Scenario: Signing in successfully lands the user on the main page
+    Given the sign-in screen is open
+    And the backend will accept the credentials
+    When the user submits a valid username and password
+    Then the main page is shown
+
+  @component
+  Scenario: Signing up successfully lands the user on the main page
+    Given the sign-up screen is open
+    And the backend will accept the registration
+    When the user submits a valid new username and password
+    Then the main page is shown
+
+  @component
+  Scenario: An already-signed-in user opening the sign-in screen is redirected to the main page
+    Given a user is signed in
+    When the user navigates to the sign-in screen
+    Then the main page is shown
+    And the sign-in screen is not shown
+
+  @component
+  Scenario: An already-signed-in user opening the sign-up screen is redirected to the main page
+    Given a user is signed in
+    When the user navigates to the sign-up screen
+    Then the main page is shown
+    And the sign-up screen is not shown
+
   # ----- Real auth end to end (@e2e) -----
 
   @e2e
-  Scenario: A newly registered user can sign out and sign back in
+  Scenario: A newly registered user can sign out and sign back in, landing on the main page each time
     Given the app is open at the sign-in screen
     When the user registers a new account and is signed in
-    And the user signs out
+    Then the main page is shown
+    When the user signs out
     And the user signs in again with the same credentials
-    Then the user is signed in and reaches the app
+    Then the main page is shown
 
   # ----- Non-functional: session & credential security (@nfr) -----
 

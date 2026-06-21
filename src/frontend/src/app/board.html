@@ -1,9 +1,22 @@
 <header class="toolbar">
-  <button type="button" class="save" data-testid="save" (click)="save()">Save</button>
+  <button type="button" data-testid="save" (click)="save()">Save</button>
+  <button type="button" data-testid="sign-out" (click)="signOut()">Sign Out</button>
+  @if (store.savedToast()) {
+    <span data-testid="saved-toast" role="status">Saved!</span>
+  }
   @if (store.error(); as error) {
     <span class="error" role="alert" data-testid="error">{{ error }}</span>
   }
 </header>
+
+@if (showSignOutDialog()) {
+  <div data-testid="unsaved-dialog" role="dialog" aria-modal="true">
+    <p>You have unsaved changes. Save before leaving?</p>
+    <button type="button" data-testid="save-and-sign-out" (click)="saveAndSignOut()">Save &amp; Sign Out</button>
+    <button type="button" data-testid="discard-and-sign-out" (click)="discardAndSignOut()">Discard &amp; Sign Out</button>
+    <button type="button" data-testid="cancel-sign-out" (click)="cancelSignOut()">Cancel</button>
+  </div>
+}
 
 <main class="canvas" data-testid="canvas" (dblclick)="onCanvasDblClick($event)">
   @for (note of store.notes(); track note.id) {

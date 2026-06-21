@@ -22,6 +22,12 @@ export class BoardStore {
   private readonly _editingId = signal<string | null>(null);
   readonly editingId = this._editingId.asReadonly();
 
+  private readonly _isDirty = signal(false);
+  readonly isDirty = this._isDirty.asReadonly();
+
+  private readonly _savedToast = signal(false);
+  readonly savedToast = this._savedToast.asReadonly();
+
   private idSeq = 0;
   private nextZ = 1;
 
@@ -31,6 +37,7 @@ export class BoardStore {
     const notes = await this.api.load();
     this._notes.set(notes);
     this._editingId.set(null);
+    this._isDirty.set(false);
     this.nextZ = notes.reduce((max, n) => Math.max(max, n.z), 0) + 1;
   }
 
@@ -38,6 +45,9 @@ export class BoardStore {
     try {
       await this.api.save(this._notes());
       this._error.set(null);
+      this._isDirty.set(false);
+      this._savedToast.set(true);
+      setTimeout(() => this._savedToast.set(false), 3000);
     } catch {
       this._error.set('The board could not be saved.');
     }
@@ -48,12 +58,14 @@ export class BoardStore {
     const note: Note = { id: `note-${++this.idSeq}`, text: '', x, y, z: this.nextZ++ };
     this._notes.update((notes) => [...notes, note]);
     this._editingId.set(note.id);
+    this._isDirty.set(true);
     return note;
   }
 
   edit(id: string, text: string): void {
     const capped = text.slice(0, MAX_NOTE_LENGTH);
     this._notes.update((notes) => notes.map((n) => (n.id === id ? { ...n, text: capped } : n)));
+    this._isDirty.set(true);
   }
 
   beginEdit(id: string): void {
@@ -67,6 +79,7 @@ export class BoardStore {
 
   move(id: string, x: number, y: number): void {
     this._notes.update((notes) => notes.map((n) => (n.id === id ? { ...n, x, y } : n)));
+    this._isDirty.set(true);
   }
 
   remove(id: string): void {
@@ -74,11 +87,17 @@ export class BoardStore {
     if (this._editingId() === id) {
       this._editingId.set(null);
     }
+    this._isDirty.set(true);
   }
 
   /** Bring a note above all others (used when it is dragged or edited). */
   raise(id: string): void {
     const z = this.nextZ++;
     this._notes.update((notes) => notes.map((n) => (n.id === id ? { ...n, z } : n)));
+  }
+
+  /** Clear the dirty flag without saving — used when discarding changes intentionally. */
+  clearDirty(): void {
+    this._isDirty.set(false);
   }
 }

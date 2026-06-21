@@ -6,7 +6,7 @@ SpecWarden treats **Gherkin as the single source of truth**. You write specifica
 
 ## Why
 
-AI coding agents have made writing code fast. They've also made it easy for an agent to confidently build the wrong thing, drift from the original intent over a long session, or silently violate architectural boundaries that no unit test would ever catch. The usual fix — adding more agents (a coordinator, several implementors, a verifier) — solves the drift problem but multiplies token spend, since every sub-agent re-sends and re-processes its own copy of the context.
+AI coding agents have made writing code fast. They've also made it easy for an agent to confidently build the wrong thing, drift from the original intent over a long session, or silently violate architectural boundaries that no unit test would ever catch. The usual fix — adding more agents (a coordinator, several implementors, a verifier) trades one problem for two: token spend multiplies, since every sub-agent re-sends and re-processes its own copy of the context, and for interdependent work like coding, sub-agents without full shared context tend to make conflicting decisions of their own — not a cure for drift so much as a relocation of it.
 
 SpecWarden takes the opposite approach:
 
