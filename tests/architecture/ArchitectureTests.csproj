@@ -2,8 +2,9 @@
 
   <!--
     Executable guard for the architecture standards in skills/arch-check/SKILL.md.
-    Each rule maps 1:1 to a [Fact], so the standards are enforced by `dotnet test`
-    (and CI) instead of relying on a reviewer reading the skill. This is the
+    Each mechanically-checkable rule maps to a [Fact], so those standards are enforced
+    by `dotnet test` (and CI) instead of relying on a reviewer reading the skill.
+    (ARCH-4/clean-code is judgment-only and has no [Fact].) This is the
     "structure" runner — the analog of the acceptance behaviour runners, applied
     to repository/code shape. Each standard stays dormant until the matching code
     exists (ARCH-1/2/3 activate once src/backend or src/frontend appears; SPEC-1

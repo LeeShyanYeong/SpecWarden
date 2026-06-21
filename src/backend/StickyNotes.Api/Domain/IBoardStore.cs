@@ -1,14 +1,14 @@
 namespace StickyNotes.Domain;
 
 /// <summary>
-/// Stores the single shared board. There are no accounts yet, so there is exactly
-/// one board; an owner can be added later without changing this contract.
+/// Stores one board per owner (keyed by the owner's normalized username). Each
+/// signed-in user has exactly one private board; there is no shared board.
 /// </summary>
 public interface IBoardStore
 {
-    /// <summary>Returns the last saved board, or <see cref="Board.Empty"/> if none.</summary>
-    Board Load();
+    /// <summary>Returns the owner's last saved board, or <see cref="Board.Empty"/> if none.</summary>
+    Board Load(string owner);
 
-    /// <summary>Replaces the stored board with <paramref name="board"/> in full.</summary>
-    void Save(Board board);
+    /// <summary>Replaces the owner's stored board with <paramref name="board"/> in full.</summary>
+    void Save(string owner, Board board);
 }

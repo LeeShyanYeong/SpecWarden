@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using Reqnroll;
@@ -30,6 +31,7 @@ public sealed class StickyNotesSteps
     private HttpResponseMessage? _lastSaveResponse;
     private BoardDto? _loadedBoard;
     private BoardDto? _baselineBoard;
+    private bool _signedIn;
 
     public StickyNotesSteps()
     {
@@ -160,6 +162,7 @@ public sealed class StickyNotesSteps
 
     private async Task SaveBoardAsync(params NoteDto[] notes)
     {
+        await EnsureSignedInAsync();
         var payload = JsonSerializer.Serialize(new BoardDto([.. notes]), Json);
         using var content = new StringContent(payload, Encoding.UTF8, "application/json");
         _lastSaveResponse = await _client.PutAsync("/api/board", content);
@@ -167,10 +170,32 @@ public sealed class StickyNotesSteps
 
     private async Task<BoardDto> LoadBoardAsync()
     {
+        await EnsureSignedInAsync();
         var response = await _client.GetAsync("/api/board");
         response.EnsureSuccessStatusCode();
         var body = await response.Content.ReadAsStringAsync();
         return JsonSerializer.Deserialize<BoardDto>(body, Json) ?? new BoardDto([]);
+    }
+
+    // The board now requires a session and is scoped per owner; sign up a fresh,
+    // unique user once so each scenario works on its own private (initially empty)
+    // board. The bearer token then rides on every /api/board request.
+    private async Task EnsureSignedInAsync()
+    {
+        if (_signedIn)
+        {
+            return;
+        }
+
+        var username = $"board-{Guid.NewGuid():N}"[..18];
+        var payload = JsonSerializer.Serialize(new { username, password = "correct-horse" }, Json);
+        using var content = new StringContent(payload, Encoding.UTF8, "application/json");
+        var response = await _client.PostAsync("/api/auth/register", content);
+        response.EnsureSuccessStatusCode();
+        var token = JsonDocument.Parse(await response.Content.ReadAsStringAsync())
+            .RootElement.GetProperty("token").GetString();
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        _signedIn = true;
     }
 
     private sealed record NoteDto(string Text, double X, double Y, int Z = 0, string Id = "");

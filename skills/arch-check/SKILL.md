@@ -19,19 +19,21 @@ those skills say "follows the architecture standards".
 ## Executable enforcement (the guard)
 
 The mechanically-checkable parts of these standards are enforced as tests in
-`tests/architecture/` (xUnit + ArchUnitNET), run by `dotnet test` and the CI
+`tests/architecture/` (plain xUnit), run by `dotnet test` and the CI
 `Architecture` stage (`scripts/stage-arch.sh`). A failing standard breaks the
 build — the same guarantee the Reqnroll/Playwright lanes give for behaviour.
 
-- Each `ARCH-n` below maps to a `[Fact]` named `ArchN_…`: ARCH-1/2/3 are
-  filesystem / project-shape facts (`StructuralStandards.cs`); ARCH-4 is a set of
-  dependency rules over the real backend assembly (`DependencyStandards.cs`).
+- The enforced standards each map to a `[Fact]`: ARCH-1/2/3 are filesystem /
+  project-shape checks (`StructuralStandards.cs`), and the spec-lifecycle guard
+  SPEC-1 (no spec left a stub) lives in `SpecHygieneStandards.cs`. These are plain
+  filesystem and text checks — there is **no** assembly/dependency analysis today
+  (no ArchUnitNET; if that's ever added, update this section and the README/docs).
+- **ARCH-4 is not enforced by a test.** It is entirely judgment-based and stays a
+  manual concern in the Steps below — there is no `[Fact]` for it.
 - This file stays the **rationale and index** (the *why*); the test project is
-  the **enforcement** (the *what*). When you add or change a standard, update both
-  and keep the `ARCH-n ⇄ [Fact]` mapping 1:1.
+  the **enforcement** (the *what*). When you add or change a *mechanically-checkable*
+  standard, update both and add its `[Fact]`; judgment-only standards stay here only.
 - Run it directly with `dotnet test tests/architecture/`.
-- The judgment-only parts of ARCH-4 (single responsibility, no duplication) are
-  not mechanically checkable and remain a manual concern in the Steps below.
 
 ## Where standards come from (ADRs)
 
@@ -42,8 +44,8 @@ this file is the *what* (the standing rules), and `tests/architecture/` is the
 only when it lands here as an `ARCH-n` standard with a matching `[Fact]`.
 
 - When an ADR makes a **binding** decision about how production code must be shaped,
-  promote it to a new `ARCH-n` standard (Rule + Check) and add its test — keeping the
-  `ARCH-n ⇄ [Fact]` mapping 1:1, exactly as for any other standard.
+  promote it to a new `ARCH-n` standard (Rule + Check) and, **if it is mechanically
+  checkable**, add its `[Fact]` — exactly as for any other enforced standard.
 - Leave **infrastructure / tooling** ADRs (container runtime, CI image, …) in `docs/adr/`
   only; they are enforced by their scripts, not by an architecture standard.
 - Cross-link the two: cite the ADR id in the standard's **Rationale** line, and name the

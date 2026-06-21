@@ -12,15 +12,17 @@ public sealed record SaveOutcome(bool Succeeded, IReadOnlyList<string> Errors)
 }
 
 /// <summary>
-/// Application service for the single shared board: read it, or save it after
+/// Application service for an owner's private board: read it, or save it after
 /// validation. The save-or-reject decision lives here, not in the HTTP endpoint,
-/// so a rejected save never touches the store (ARCH-4: logic in services).
+/// so a rejected save never touches the store (ARCH-4: logic in services). The
+/// owner is resolved from the session by the endpoint; this service never serves
+/// one owner another's board.
 /// </summary>
 public sealed class BoardService(IBoardStore store, BoardValidator validator)
 {
-    public Board GetBoard() => store.Load();
+    public Board GetBoard(string owner) => store.Load(owner);
 
-    public SaveOutcome SaveBoard(Board board)
+    public SaveOutcome SaveBoard(string owner, Board board)
     {
         var errors = validator.Validate(board);
         if (errors.Count > 0)
@@ -28,7 +30,7 @@ public sealed class BoardService(IBoardStore store, BoardValidator validator)
             return SaveOutcome.Rejected(errors);
         }
 
-        store.Save(board);
+        store.Save(owner, board);
         return SaveOutcome.Ok();
     }
 }

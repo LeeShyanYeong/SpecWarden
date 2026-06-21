@@ -53,8 +53,9 @@ specs/        Feature files — declarative SSOT (written by spec-task). One sto
               per vertical slice; each scenario routed by its level tag:
               @api → Reqnroll, @e2e + @component → Playwright.
 tests/
-  architecture/ ArchUnit lane (xUnit + ArchUnitNET) — the architecture standards
-                from arch-check as executable, build-breaking tests (ARCH-n ⇄ [Fact]).
+  architecture/ Architecture lane (xUnit) — the mechanically-checkable arch-check
+                standards (ARCH-1/2/3) + the SPEC-1 stub guard, as build-breaking
+                tests. ARCH-4 (clean-code) is judgment-only, enforced at review.
   acceptance/
     reqnroll/   Reqnroll runner for @api scenarios (the REST contract) — Features/
                 is generated from specs/.

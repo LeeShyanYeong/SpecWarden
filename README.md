@@ -23,7 +23,7 @@ There are two kinds of truth, and one guard for each:
 | SSOT artifact            | Guards    | Runner                                                |
 | ------------------------ | --------- | ----------------------------------------------------- |
 | `specs/*.feature`        | behaviour | A Gherkin runner (Reqnroll or Playwright-BDD)         |
-| `skills/arch-check` rules | structure | An architecture runner (ArchUnitNET / xUnit)          |
+| `skills/arch-check` rules | structure | An architecture runner (xUnit; filesystem + text checks) |
 
 A feature file is **one vertical slice**, and each scenario carries a **level tag** that routes it to the runner strongest for that level:
 
@@ -61,7 +61,7 @@ The typical path: **story → brainstorm (if large) → spec → atdd/tdd → ar
 - **Backend:** ASP.NET Core (.NET 10, C#) — REST API + domain services.
 - **Frontend:** Angular (TypeScript) — bundled into the API so the two ship as one container on one port.
 - **Behaviour guards:** Reqnroll (`@api`) and Playwright-BDD (`@component`, `@e2e`).
-- **Structure guard:** ArchUnitNET + xUnit (`tests/architecture/`).
+- **Structure guard:** xUnit (`tests/architecture/`) — ARCH-1/2/3 + the SPEC-1 stub guard as filesystem/text checks; ARCH-4 (clean-code) is enforced at review, not by a test.
 - **CI:** `azure-pipelines.yml` runs each lane as a blocking stage; `scripts/pipeline.sh` runs the whole thing locally.
 
 ## Quickstart
@@ -98,7 +98,7 @@ src/
 stories/      User stories — narrative + acceptance criteria (intent only)
 specs/        Feature files — the declarative SSOT; one story per vertical slice
 tests/
-  architecture/  ArchUnit lane — the architecture standards as build-breaking tests
+  architecture/  Architecture lane (xUnit) — the arch-check standards as build-breaking tests
   acceptance/
     reqnroll/    Reqnroll runner for @api scenarios (the REST contract)
     playwright/  Playwright-BDD runner for @e2e (live smoke) + @component (stubbed UX)

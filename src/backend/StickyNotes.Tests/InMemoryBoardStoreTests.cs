@@ -4,12 +4,14 @@ namespace StickyNotes.Tests;
 
 public class InMemoryBoardStoreTests
 {
+    private const string Owner = "ada";
+
     [Fact]
-    public void NewStore_LoadsAnEmptyBoard()
+    public void NewStore_LoadsAnEmptyBoardForAnyOwner()
     {
         var store = new InMemoryBoardStore();
 
-        Assert.Empty(store.Load().Notes);
+        Assert.Empty(store.Load(Owner).Notes);
     }
 
     [Fact]
@@ -25,10 +27,10 @@ public class InMemoryBoardStoreTests
             ],
         };
 
-        store.Save(board);
+        store.Save(Owner, board);
 
         Assert.Collection(
-            store.Load().Notes,
+            store.Load(Owner).Notes,
             n => Assert.Equal(("A", 10d, 10d), (n.Text, n.X, n.Y)),
             n => Assert.Equal(("B", 50d, 60d), (n.Text, n.X, n.Y)));
     }
@@ -37,11 +39,11 @@ public class InMemoryBoardStoreTests
     public void Save_ReplacesThePreviousBoardEntirely_LastWriteWins()
     {
         var store = new InMemoryBoardStore();
-        store.Save(new Board { Notes = [new Note { Text = "A" }, new Note { Text = "B" }] });
+        store.Save(Owner, new Board { Notes = [new Note { Text = "A" }, new Note { Text = "B" }] });
 
-        store.Save(new Board { Notes = [new Note { Text = "C" }] });
+        store.Save(Owner, new Board { Notes = [new Note { Text = "C" }] });
 
-        var loaded = store.Load();
+        var loaded = store.Load(Owner);
         Assert.Single(loaded.Notes);
         Assert.Equal("C", loaded.Notes[0].Text);
     }
@@ -50,10 +52,21 @@ public class InMemoryBoardStoreTests
     public void SavingAnEmptyBoard_ClearsTheStoredNotes()
     {
         var store = new InMemoryBoardStore();
-        store.Save(new Board { Notes = [new Note { Text = "A" }] });
+        store.Save(Owner, new Board { Notes = [new Note { Text = "A" }] });
 
-        store.Save(Board.Empty);
+        store.Save(Owner, Board.Empty);
 
-        Assert.Empty(store.Load().Notes);
+        Assert.Empty(store.Load(Owner).Notes);
+    }
+
+    [Fact]
+    public void EachOwnerHasAnIsolatedBoard()
+    {
+        var store = new InMemoryBoardStore();
+        store.Save("ann", new Board { Notes = [new Note { Text = "Ann's note" }] });
+        store.Save("bob", new Board { Notes = [new Note { Text = "Bob's note" }] });
+
+        Assert.Equal("Ann's note", Assert.Single(store.Load("ann").Notes).Text);
+        Assert.Equal("Bob's note", Assert.Single(store.Load("bob").Notes).Text);
     }
 }

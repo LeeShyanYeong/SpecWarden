@@ -34,7 +34,7 @@ flowchart TD
     spec -->|"@api"| reqnroll["Reqnroll<br/>HTTP · real backend"]
     spec -->|"@component"| pwc["Playwright-BDD<br/>browser · stubbed backend"]
     spec -->|"@e2e"| pwe["Playwright-BDD<br/>browser · real backend"]
-    arch --> archrun["ArchUnitNET + xUnit<br/>tests/architecture/"]
+    arch --> archrun["xUnit<br/>tests/architecture/"]
 
     reqnroll --> verdict{{"build fails on red"}}
     pwc --> verdict
@@ -89,13 +89,16 @@ vocabularies leaking into the prose.
 ## 4. The structure guard (architecture-as-tests)
 
 The architecture standards in `skills/arch-check` are not a doc a reviewer is trusted to
-remember — they are executable. `tests/architecture/` is an xUnit + ArchUnitNET project
-where **each rule maps 1:1 to a `[Fact]`**, so `dotnet test` (and CI) breaks the build on
-a violation, exactly like a failing scenario:
+remember — they are executable. `tests/architecture/` is a plain xUnit project
+where **each mechanically-checkable rule maps to a `[Fact]`**, so `dotnet test` (and CI)
+breaks the build on a violation, exactly like a failing scenario:
 
 - `StructuralStandards.cs` — ARCH-1 (every executable service ships a `Dockerfile`),
   ARCH-2 (backend targets `net10.0`), ARCH-3 (frontend is an Angular workspace).
 - `SpecHygieneStandards.cs` — SPEC-1 (no spec is left a stub; see §5).
+- ARCH-4 (clean-code discipline) has **no** `[Fact]` — it is judgment-only (single
+  responsibility, no duplication, DI, no logic in controllers/components) and stays a
+  manual concern enforced by `code-review`, not by this lane.
 - `RepoRoot.cs` — locates the repo root by walking up to the directory containing
   `AGENTS.md`, so the rules inspect the real tree instead of hardcoded paths.
 

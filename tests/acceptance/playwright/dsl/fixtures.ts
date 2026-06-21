@@ -1,5 +1,6 @@
 import { test as base, createBdd } from 'playwright-bdd';
 import { expect, type APIRequestContext, type Locator, type Page } from '@playwright/test';
+import { AuthDriver } from './auth-driver';
 
 const API_BASE = process.env.API_BASE_URL ?? 'http://localhost:8080';
 
@@ -16,6 +17,8 @@ class BoardDriver {
 
   private saved: StubNote[] = [];
   private rejectSave = false;
+  private rejectUnauthenticated = false;
+  private seq = 0;
 
   constructor(
     private readonly page: Page,
@@ -33,35 +36,112 @@ class BoardDriver {
     this.rejectSave = true;
   }
 
+  /** Make the next stubbed save respond 401 (an expired/rejected session). */
+  rejectSaveAsUnauthenticated(): void {
+    this.rejectUnauthenticated = true;
+  }
+
   async open(): Promise<void> {
+    this.registerDialogCapture();
+    if (this.stubbed) {
+      await this.installBoardStub();
+    }
+    await this.seedSession();
+    await this.page.goto('/');
+    await expect(this.canvas).toBeVisible();
+  }
+
+  // ----- signed-in board variants (private-user-boards) -----
+
+  /** @component: stub the owner's saved board and seed a session (no navigation yet). */
+  async signedInWithSavedBoard(notes: StubNote[]): Promise<void> {
+    this.setSavedBoard(notes);
+    this.registerDialogCapture();
+    await this.installBoardStub();
+    await this.seedSession();
+  }
+
+  /** @component: signed in, on the board, with one unsaved note in progress. */
+  async signedInEditingBoard(): Promise<void> {
+    await this.signedInWithSavedBoard([]);
+    await this.page.goto('/');
+    await expect(this.canvas).toBeVisible();
+    await this.createSettledNote(200, 150, 'Draft note');
+  }
+
+  /** @e2e: a real new account saves a note, then signs out. */
+  async signUpSaveNoteAndSignOut(text: string): Promise<void> {
+    this.registerDialogCapture();
+    await this.seedSession();
+    await this.page.goto('/');
+    await expect(this.canvas).toBeVisible();
+    await this.createSettledNote(180, 140, text);
+    await this.clickSave();
+    await this.page.evaluate(() => localStorage.removeItem('auth_token'));
+    await this.page.goto('/signin');
+  }
+
+  /** @e2e: a different real new account opens its (empty) board. */
+  async signUpAndOpenBoard(): Promise<void> {
+    await this.seedSession();
+    await this.page.goto('/');
+    await expect(this.canvas).toBeVisible();
+  }
+
+  async navigateToBoard(): Promise<void> {
+    await this.page.goto('/');
+  }
+
+  async expectEmptyBoard(): Promise<void> {
+    await expect(this.canvas).toBeVisible();
+    await expect(this.notes).toHaveCount(0);
+  }
+
+  private registerDialogCapture(): void {
     this.page.on('dialog', (d) => {
       this.dialogs.push(d.message());
       void d.dismiss();
     });
+  }
 
-    if (this.stubbed) {
-      await this.page.route('**/api/board', async (route) => {
-        const req = route.request();
-        if (req.method() === 'GET') {
-          await route.fulfill({ json: { notes: this.saved } });
-        } else if (req.method() === 'PUT') {
-          if (this.rejectSave) {
-            await route.fulfill({ status: 400, json: { errors: ['rejected'] } });
-          } else {
-            this.saved = req.postDataJSON()?.notes ?? [];
-            await route.fulfill({ json: { notes: this.saved } });
-          }
+  private async installBoardStub(): Promise<void> {
+    await this.page.route('**/api/board', async (route) => {
+      const req = route.request();
+      if (req.method() === 'GET') {
+        await route.fulfill({ json: { notes: this.saved } });
+      } else if (req.method() === 'PUT') {
+        if (this.rejectUnauthenticated) {
+          await route.fulfill({ status: 401, json: { error: 'authentication required' } });
+        } else if (this.rejectSave) {
+          await route.fulfill({ status: 400, json: { errors: ['rejected'] } });
         } else {
-          await route.continue();
+          this.saved = req.postDataJSON()?.notes ?? [];
+          await route.fulfill({ json: { notes: this.saved } });
         }
-      });
-    } else {
-      // @e2e: start from a known empty board on the real backend.
-      await this.request.put(`${API_BASE}/api/board`, { data: { notes: [] } });
-    }
+      } else {
+        await route.continue();
+      }
+    });
+  }
 
-    await this.page.goto('/');
-    await expect(this.canvas).toBeVisible();
+  /**
+   * Seed a session so the guarded board route is reachable. @component seeds a
+   * fake token (the board backend is stubbed); @e2e registers a real, unique
+   * account against the live backend (a new account starts with an empty board).
+   */
+  private async seedSession(): Promise<void> {
+    if (this.stubbed) {
+      await this.page.goto('/signin');
+      await this.page.evaluate(() => localStorage.setItem('auth_token', 'stub-token'));
+      return;
+    }
+    const username = `board_${this.seq++}_${Math.floor(Math.random() * 1e6)}`;
+    const res = await this.request.post(`${API_BASE}/api/auth/register`, {
+      data: { username, password: 'correct-horse' },
+    });
+    const token = (await res.json()).token as string;
+    await this.page.goto('/signin');
+    await this.page.evaluate((t) => localStorage.setItem('auth_token', t), token);
   }
 
   // ----- locators -----
@@ -168,11 +248,15 @@ class BoardDriver {
   }
 }
 
-export const test = base.extend<{ board: BoardDriver }>({
+export const test = base.extend<{ board: BoardDriver; auth: AuthDriver }>({
   board: async ({ page, request, $tags }, use) => {
     // @component answers the backend locally; @e2e hits the real backend.
     const stubbed = $tags.includes('@component');
     await use(new BoardDriver(page, request, stubbed));
+  },
+  auth: async ({ page, request, $tags }, use) => {
+    const stubbed = $tags.includes('@component');
+    await use(new AuthDriver(page, request, stubbed));
   },
 });
 
