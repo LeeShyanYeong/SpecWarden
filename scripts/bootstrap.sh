@@ -122,7 +122,12 @@ check_dotnet() {
 _activate_nvm() {
   # shellcheck source=/dev/null
   if [ -f "${REAL_HOME}/.nvm/nvm.sh" ]; then
-    HOME="$REAL_HOME" source "${REAL_HOME}/.nvm/nvm.sh"
+    export NVM_DIR="${REAL_HOME}/.nvm"
+    # nvm.sh may run commands that fail on WSL (Windows npm bleed-through);
+    # disable errexit so a non-zero inside nvm.sh doesn't kill bootstrap.
+    set +e
+    source "${REAL_HOME}/.nvm/nvm.sh"
+    set -e
   fi
 }
 
@@ -151,10 +156,10 @@ check_node() {
     return
   fi
 
-  info "Installing Node.js ${NODE_MIN_MAJOR} via nvm..."
+  info "Installing Node.js ${NODE_MIN_MAJOR} via nvm (this may take a minute)..."
   # On WSL, Windows npm may bleed through and make nvm exit non-zero even
   # after a successful node install. Treat as success if the binary exists.
-  nvm install "${NODE_MIN_MAJOR}" || true
+  nvm install "${NODE_MIN_MAJOR}" 2>&1 | grep -v "^npm " || true
   nvm use "${NODE_MIN_MAJOR}" || true
   command -v node &>/dev/null || fail "Node.js ${NODE_MIN_MAJOR} installation failed — check nvm output above."
 
