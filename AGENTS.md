@@ -4,9 +4,11 @@ Instructions for AI coding agents working in this repository.
 
 ## Project overview
 
-A sample workflow project demonstrating how to structure agent instructions and reusable skills.
-The backend is **ASP.NET Core (.NET, C#)** and the frontend is an **Angular** app. See the
-architecture standards in `arch-check` for the binding rules.
+A spec-driven development methodology for AI agents, with a worked reference implementation:
+an **ASP.NET Core (.NET, C#)** backend and an **Angular** frontend. The method (the reusable
+skills) is the product; this stack is the concrete example that grounds it. See
+[docs/architecture.md](docs/architecture.md) for the canonical model and the architecture
+standards in `arch-check` for the binding rules.
 
 ## Commands
 
@@ -67,12 +69,11 @@ skills/       Reusable agent skills (see Skills below)
 TODO.md       Persistent task list (one block per task)
 ```
 
-Each SSOT artifact is **runner-guarded**: a runner consumes it on every build and
-CI fails on red. A vertical slice is **one story** whose scenarios are routed per
-level to the runner strongest for it: `@api` → Reqnroll (REST contract), `@e2e` →
-Playwright (live-UI smoke), `@component` → Playwright (stubbed-UI / UX). Structure →
-the architecture lane. See the stage scripts in `scripts/` and `azure-pipelines.yml`
-for how each lane is wired as a pipeline blocker.
+Each SSOT artifact is **runner-guarded**: a runner consumes it on every build and CI fails
+on red. The full model — tag routing (`@api` → Reqnroll, `@component`/`@e2e` → Playwright),
+the protocol-driver seam, the dormant-until-present guards, and how each lane is wired as a
+pipeline blocker — lives in **[docs/architecture.md](docs/architecture.md)** (canonical); see
+the stage scripts in `scripts/` and `azure-pipelines.yml` for the wiring.
 
 ## Skills
 

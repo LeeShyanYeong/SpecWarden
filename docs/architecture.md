@@ -3,6 +3,10 @@
 How SpecWarden enforces a spec against a .NET + Angular codebase. This is the
 implementation behind the README's "Guards, not vibes."
 
+> **This page is the canonical reference for SpecWarden's model.** The README and
+> AGENTS.md deliberately keep only a summary and link here; when a summary and this
+> page disagree, this page wins. Update the model here first.
+
 ## 1. The model: SSOT + runner-guarded
 
 A **single source of truth (SSOT)** artifact is a document that is the *only* place a

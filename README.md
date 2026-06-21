@@ -1,60 +1,65 @@
 # SpecWarden
 
-> A lightweight, single-agent, spec-driven development framework for .NET + Angular teams.
+![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
+![Status](https://img.shields.io/badge/status-alpha-orange)
+![Release](https://img.shields.io/github/v/release/LeeShyanYeong/SpecWarden?include_prereleases)
 
-SpecWarden treats **Gherkin as the single source of truth**. You write specifications once, in plain `Given/When/Then` language, and they do double duty: they read like ordinary documentation, and they are continuously enforced against your codebase by automated guards. There is no separate "spec" and "implementation" to keep in sync by hand — the spec *is* the contract, and the contract is checked on every run.
+> A **spec-driven development methodology for AI coding agents**: write the requirement once as Gherkin, wire it to test runners, and let deterministic guards — not the agent's own judgement — decide when a slice is done. The agent fails *incomplete*, never *confidently wrong*.
 
-## Why
+**The methodology is the product; a worked reference proves it out.** SpecWarden is first a *method* — a set of plain-Markdown, stack-neutral [skills](skills/) that walk one agent from idea to merged code against a frozen spec. This repo also ships a complete, CI-green implementation of that method on **ASP.NET Core + Angular**, so every idea is something you can run, not just read. The skills are portable; the .NET + Angular code is the concrete example that grounds them.
 
-AI coding agents have made writing code fast. They've also made it easy for an agent to confidently build the wrong thing, drift from the original intent over a long session, or silently violate architectural boundaries that no unit test would ever catch. The usual fix — adding more agents (a coordinator, several implementors, a verifier) trades one problem for two: token spend multiplies, since every sub-agent re-sends and re-processes its own copy of the context, and for interdependent work like coding, sub-agents without full shared context tend to make conflicting decisions of their own — not a cure for drift so much as a relocation of it.
+Most spec-driven setups keep the spec in Markdown, so every run the model has to *interpret* it — which leans on a premium model and gives you non-deterministic enforcement. SpecWarden keeps the spec in Gherkin and wires it to test runners, so enforcement is a deterministic pass/fail gate. A weaker model can still fail to finish a slice, but it can't quietly mark a wrong implementation as done — the runner decides, not the agent.
 
-SpecWarden takes the opposite approach:
+**Status:** alpha (`v0.1.0-alpha`). Usable and CI-green. The reference implementation is fixed to .NET + Angular, and the sticky-notes example is still partly baked into the scaffolding — see [Scope & honest limits](#scope--honest-limits) and [The example app](#the-example-app).
 
-- **One spec, human and machine readable.** A `.feature` file is the requirement doc *and* the test *and* the architectural boundary, so there's nothing to keep in sync.
-- **One agent, tightly scoped.** Instead of orchestrating multiple agents to compensate for an ambiguous brief, the spec itself constrains what the agent can build, so a single agent with a smaller context window can do the job reliably.
-- **Guards, not vibes.** Behavior is checked by a Gherkin test runner; architecture is checked by static architecture rules. The agent doesn't get to mark its own homework.
+## The problem
 
-## How it works
+AI coding agents made writing code fast. They also made it easy to confidently build the wrong thing, drift from the original intent over a long session, or silently cross an architectural boundary no unit test would catch. The common remedy — orchestrating several agents (a coordinator, implementors, a verifier) — fixes drift but multiplies token spend, since every sub-agent re-sends and re-processes its own copy of the context.
 
-Every requirement in SpecWarden lives as a **single source of truth (SSOT)** artifact, and every SSOT artifact is **runner-guarded**: an always-run executable consumes it on each build, and the build fails when reality drifts from the document. A document that no runner reads is just a wish — SpecWarden only counts artifacts a guard enforces.
+SpecWarden takes the opposite bet:
 
-There are two kinds of truth, and one guard for each:
+- **One spec, human- and machine-readable.** A `.feature` file is the requirement doc *and* the test, so there's nothing to keep in sync.
+- **One agent, tightly scoped.** The frozen spec constrains what the agent may build, so a single agent with a smaller context window can do the job — no orchestra required.
+- **Guards, not vibes.** Behaviour is checked by a Gherkin runner; structure by static architecture rules. The agent doesn't get to mark its own homework.
 
-| SSOT artifact            | Guards    | Runner                                                |
-| ------------------------ | --------- | ----------------------------------------------------- |
-| `specs/*.feature`        | behaviour | A Gherkin runner (Reqnroll or Playwright-BDD)         |
+## How it works (in one minute)
+
+Every requirement lives as a **single source of truth (SSOT)** artifact, and every SSOT is **runner-guarded**: an always-run executable consumes it on each build, and the build fails when the code drifts from the document. A document no runner reads is just a wish.
+
+| SSOT artifact             | Guards    | Runner                                                   |
+| ------------------------- | --------- | -------------------------------------------------------- |
+| `specs/*.feature`         | behaviour | A Gherkin runner (Reqnroll or Playwright-BDD)            |
 | `skills/arch-check` rules | structure | An architecture runner (xUnit; filesystem + text checks) |
 
-A feature file is **one vertical slice**, and each scenario carries a **level tag** that routes it to the runner strongest for that level:
+A feature file is **one vertical slice**; each scenario carries a **level tag** (`@api`, `@component`, `@e2e`) that routes it to the runner strongest for that level. A bare clone is green, yet a half-finished slice is red — the guards stay dormant until the matching code exists, and a spec stub fails CI until it's filled in.
 
-| Level tag    | Runner          | Checks                                              |
-| ------------ | --------------- | --------------------------------------------------- |
-| `@api`       | Reqnroll        | the REST contract, driven over HTTP                 |
-| `@component` | Playwright-BDD  | UI behaviour / UX with the backend **stubbed**      |
-| `@e2e`       | Playwright-BDD  | a thin live-system smoke against the **real** backend |
-
-The same `.feature` file is synced into whichever runner owns each scenario at build time (`scripts/stage-cucumber.sh` for `@api`, `tests/acceptance/playwright/sync-specs.mjs` for `@component`/`@e2e`), so you never copy a requirement by hand. Structure is guarded the same way: the rules described in `skills/arch-check` exist as build-breaking `[Fact]` tests under `tests/architecture/`.
-
-> **The guards are dormant until the matching code exists.** A bare clone is green: each architecture rule activates only once `src/backend` or `src/frontend` appears, and a half-finished spec stub *fails* CI until it is filled in. You are never forced to fight a guard for code you haven't written yet, but you can't merge a stub either.
-
-For the full implementation — tag routing, the build pipeline, and how each guard is wired — see **[docs/](docs/)**.
+> **The full model — tag routing, the protocol-driver seam, the dormant-until-present guards, and the CI pipeline — is documented once, canonically, in [docs/architecture.md](docs/architecture.md).** This README is a summary; that doc is the source of truth.
 
 ## The agent workflow
 
 SpecWarden ships a set of plain-Markdown **skills** (`skills/`) that walk one agent through a slice from idea to merged code. Each is a focused, vendor-neutral playbook:
 
-| Skill              | Use when…                                                            |
-| ------------------ | ------------------------------------------------------------------- |
-| `user-story-task`  | capturing a raw need as a user story (`stories/<name>.md`)          |
-| `brainstorm-task`  | a single idea is too big and needs splitting into one stub per feature |
-| `spec-task`        | turning an idea into a specification by example (`specs/<name>.feature`) |
-| `atdd-task`        | implementing a `.feature` test-first at the acceptance level        |
-| `tdd-task`         | implementing a unit of code test-first (red → green → refactor)     |
-| `arch-check`       | confirming a change satisfies the architecture standards            |
-| `code-review`      | reviewing a diff or PR before it merges                             |
-| `bootstrap`        | setting up a fresh clone or fixing missing/wrong-version system deps |
+| Skill             | Use when…                                                                |
+| ----------------- | ------------------------------------------------------------------------ |
+| `user-story-task` | capturing a raw need as a user story (`stories/<name>.md`)               |
+| `brainstorm-task` | a single idea is too big and needs splitting into one stub per feature   |
+| `spec-task`       | turning an idea into a specification by example (`specs/<name>.feature`) |
+| `atdd-task`       | implementing a `.feature` test-first at the acceptance level             |
+| `tdd-task`        | implementing a unit of code test-first (red → green → refactor)          |
+| `arch-check`      | confirming a change satisfies the architecture standards                 |
+| `code-review`     | reviewing a diff or PR before it merges                                  |
+| `bootstrap`       | setting up a fresh clone or fixing missing/wrong-version system deps     |
 
 The typical path: **story → brainstorm (if large) → spec → atdd/tdd → arch-check → code-review.** See **[docs/workflow.md](docs/workflow.md)** for the end-to-end loop.
+
+## Scope & honest limits
+
+Alpha is the time to be clear about what the guards do and don't buy you:
+
+- **The guard enforces spec↔code fidelity, not spec correctness.** The runner proves the code does what the `.feature` says; it cannot prove the `.feature` says the *right* thing. The agent still authors the scenarios (in `spec-task`), so a confidently-wrong *spec* will pass its own runner. The defence there is human review of the spec — which is exactly why `stories/` (intent a human signs off on) is kept separate from `specs/` (the executable contract).
+- **It earns its weight on long, autonomous runs.** The loop — story → spec → ATDD/TDD → arch-check → review, across a multi-lane pipeline — pays off when an agent works long and unsupervised and drift is the real risk. For a one-line human change it is overhead; reach for the full loop when the work is big enough to drift.
+- **The reference stack is fixed.** The methodology is stack-neutral, but this implementation is .NET + Angular. Porting the guards elsewhere is straightforward in principle (a Gherkin runner plus a handful of filesystem/text checks) but not yet done.
+- **The example is partly baked in.** A few scaffolding files still name the sticky-notes example; they are inventoried in [docs/example-app.md](docs/example-app.md) and tracked in [TODO.md](TODO.md).
 
 ## Tech stack
 
@@ -66,7 +71,7 @@ The typical path: **story → brainstorm (if large) → spec → atdd/tdd → ar
 
 ## Quickstart
 
-```bash
+```
 # 1. Set up system dependencies (.NET, Node, container runtime). See skills/bootstrap.
 scripts/bootstrap.sh
 
@@ -76,7 +81,7 @@ scripts/pipeline.sh
 
 Per-stack commands (see [AGENTS.md](AGENTS.md) for the full table):
 
-```bash
+```
 # Backend (from src/backend/)
 dotnet build && dotnet test && dotnet format
 
