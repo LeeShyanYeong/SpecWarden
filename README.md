@@ -8,11 +8,11 @@
 
 That difference is the whole point. A Markdown spec has to be re-interpreted on every run, which leans on a premium model and gives you enforcement that drifts. A spec wired to a runner is checked like any other test: green or red, the same answer every time. A weak model can still fail to finish a slice here, but it cannot quietly pass a wrong implementation off as done.
 
-**SpecWarden is a method first.** At its core is a set of plain-Markdown, stack-neutral [skills](skills/) that walk one agent from idea to merged code against a frozen spec. The repo also ships a working, CI-green implementation of that method on **ASP.NET Core + Angular**, so you can run every idea instead of just reading about it. The skills are portable. The .NET and Angular code is the concrete example that grounds them.
+**SpecWarden is a method first.** At its core is a set of plain-Markdown, stack-neutral [skills](skills/) that walk one agent from idea to merged code against a frozen spec. The repo also ships a working, fully green implementation of that method on **ASP.NET Core + Angular**, so you can run every idea instead of just reading about it. The skills are portable. The .NET and Angular code is the concrete example that grounds them.
 
 Wiring specs to runners is not itself new. Executable specifications (Cucumber, SpecFlow/Reqnroll) have done it in BDD for years. What is new is bringing that discipline into the AI agent loop, where the current crop of spec-driven tools went the other way and left the spec as prose.
 
-**Status:** alpha (`v0.1.0-alpha`). Usable and CI-green. The reference implementation is fixed to .NET + Angular, and the sticky-notes example is still partly baked into the scaffolding. See [Scope & honest limits](#scope--honest-limits) and [The example app](#the-example-app).
+**Status:** alpha (`v0.1.0-alpha`). Usable and green via the full local pipeline (`scripts/pipeline.sh`); hosted CI is next. The reference implementation is fixed to .NET + Angular, and the sticky-notes example is still partly baked into the scaffolding. See [Scope & honest limits](#scope--honest-limits) and [The example app](#the-example-app).
 
 ## The problem
 
@@ -33,7 +33,7 @@ Every requirement lives as a **single source of truth (SSOT)** artifact, and eve
 | `specs/*.feature`         | behaviour | A Gherkin runner (Reqnroll or Playwright-BDD)            |
 | `skills/arch-check` rules | structure | An architecture runner (xUnit; filesystem + text checks) |
 
-A feature file is **one vertical slice**. Each scenario carries a **level tag** (`@api`, `@component`, `@e2e`) that routes it to the runner strongest for that level. A bare clone is green, yet a half-finished slice is red: the guards stay dormant until the matching code exists, and a spec stub fails CI until it is filled in.
+A feature file is **one vertical slice**. Each scenario carries a **level tag** (`@api`, `@component`, `@e2e`) that routes it to the runner strongest for that level. A bare clone is green, yet a half-finished slice is red: the guards stay dormant until the matching code exists, and a spec stub fails the build until it is filled in.
 
 > **The full model (tag routing, the protocol-driver seam, the dormant-until-present guards, and the CI pipeline) is documented once, canonically, in [docs/architecture.md](docs/architecture.md).** This README is a summary; that doc is the source of truth.
 
@@ -69,7 +69,7 @@ Alpha is the time to be clear about what the guards do and do not buy you:
 - **Frontend:** Angular (TypeScript), bundled into the API so the two ship as one container on one port.
 - **Behaviour guards:** Reqnroll (`@api`) and Playwright-BDD (`@component`, `@e2e`).
 - **Structure guard:** xUnit (`tests/architecture/`). ARCH-1/2/3 plus the SPEC-1 stub guard as filesystem/text checks; ARCH-4 (clean-code) is enforced at review, not by a test.
-- **CI:** `azure-pipelines.yml` runs each lane as a blocking stage, and `scripts/pipeline.sh` runs the whole thing locally.
+- **CI:** `azure-pipelines.yml` defines each lane as a blocking stage, and `scripts/pipeline.sh` runs the whole thing locally.
 
 ## Quickstart
 
