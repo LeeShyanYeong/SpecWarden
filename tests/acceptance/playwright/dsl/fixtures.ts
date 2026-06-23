@@ -23,6 +23,10 @@ class BoardDriver {
   private rejectUnauthenticated = false;
   private seq = 0;
 
+  // Load-state controls (@component): hold the load GET to stay "loading", or fail it.
+  private holdLoadFlag = false;
+  private failLoadFlag = false;
+
   constructor(
     private readonly page: Page,
     private readonly request: APIRequestContext,
@@ -42,6 +46,21 @@ class BoardDriver {
   /** Make the next stubbed save respond 401 (an expired/rejected session). */
   rejectSaveAsUnauthenticated(): void {
     this.rejectUnauthenticated = true;
+  }
+
+  /** Hold the load GET pending so the board stays in its (pre-first-load) loading state. */
+  holdLoad(): void {
+    this.holdLoadFlag = true;
+  }
+
+  /** Make the load GET fail (server down at startup) so the retry banner shows. */
+  failLoad(): void {
+    this.failLoadFlag = true;
+  }
+
+  /** Let a subsequent load GET succeed again — used before clicking Retry. */
+  succeedLoad(): void {
+    this.failLoadFlag = false;
   }
 
   async open(): Promise<void> {
@@ -124,6 +143,15 @@ class BoardDriver {
     await this.page.route('**/api/board', async (route) => {
       const req = route.request();
       if (req.method() === 'GET') {
+        if (this.failLoadFlag) {
+          await route.fulfill({ status: 500, json: { error: 'load failed' } });
+          return;
+        }
+        if (this.holdLoadFlag) {
+          // Never fulfilled within the test: the board stays in its loading state.
+          await new Promise<void>(() => {});
+          return;
+        }
         await route.fulfill({ json: { notes: this.saved } });
       } else if (req.method() === 'PUT') {
         this._saveCalls++;
@@ -175,6 +203,18 @@ class BoardDriver {
     return this.page.getByTestId('error');
   }
 
+  get loadBanner(): Locator {
+    return this.page.getByTestId('load-error');
+  }
+
+  get retryButton(): Locator {
+    return this.page.getByTestId('retry-load');
+  }
+
+  get emptyState(): Locator {
+    return this.page.getByTestId('empty-board');
+  }
+
   noteByText(text: string): Locator {
     return this.page.locator(`[data-testid="note"][data-text="${text}"]`);
   }
@@ -213,13 +253,17 @@ class BoardDriver {
   }
 
   async exitEdit(): Promise<void> {
-    // focus() then blur() ensures the blur event fires even if the textarea was
-    // never natively focused (Angular doesn't auto-focus newly created textareas).
-    await this.page.evaluate(() => {
-      const ta = document.querySelector('textarea') as HTMLTextAreaElement | null;
-      if (ta) { ta.focus(); ta.blur(); }
-    });
-    await expect(this.page.locator('textarea')).toHaveCount(0);
+    // Leaving edit mode relies on the note's (blur) -> endEdit signal flushing a
+    // (zoneless) change-detection pass that removes the textarea. A single synthetic
+    // blur occasionally doesn't settle that pass (a pre-existing race, independent of
+    // styling), so re-dispatch blur until the textarea is actually gone.
+    const textarea = this.page.locator('textarea');
+    await expect(async () => {
+      if (await textarea.count()) {
+        await textarea.first().dispatchEvent('blur');
+      }
+      expect(await textarea.count()).toBe(0);
+    }).toPass({ timeout: 7000, intervals: [50, 100, 200, 400, 800] });
   }
 
   async dragLocatorBy(locator: Locator, dx: number, dy: number): Promise<void> {
@@ -257,6 +301,34 @@ class BoardDriver {
     );
     await this.page.getByTestId('save').click();
     await put;
+  }
+
+  /** @component: edit a note by double-clicking it (which raises it to the front).
+   * Dispatch the event directly so an overlapping note can't intercept the pointer
+   * (mirrors how dragLocatorBy synthesises pointer events). */
+  async editNoteByText(text: string): Promise<void> {
+    await this.noteByText(text).dispatchEvent('dblclick');
+  }
+
+  /** @component: make an unsaved change so the board becomes dirty. */
+  async makeChange(): Promise<void> {
+    await this.createSettledNote(200, 150, 'Change');
+  }
+
+  /** @component: open the board when the load is configured to fail; assert the banner. */
+  async openWithFailedLoad(): Promise<void> {
+    this.failLoad();
+    await this.open();
+    await expect(this.loadBanner).toBeVisible();
+  }
+
+  /** @component: click Retry and wait for the re-attempted load GET to complete. */
+  async clickRetry(): Promise<void> {
+    const get = this.page.waitForResponse(
+      (r) => r.url().includes('/api/board') && r.request().method() === 'GET',
+    );
+    await this.retryButton.click();
+    await get;
   }
 
   // ----- toolbar UX (board-toolbar-ux) -----

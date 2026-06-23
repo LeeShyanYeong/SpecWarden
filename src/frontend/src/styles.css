@@ -1,1 +1,92 @@
-/* You can add global styles to this file, and also import other style files */
+/* Design tokens — the single source of visual values (ADR-003 / ARCH-5).
+   This is the ONLY stylesheet allowed to hold raw hex/px literals; every
+   component stylesheet references these via var(--token). Naming: --<category>-<role>. */
+
+:root {
+  /* Color — surfaces */
+  --color-canvas: #f3f4f6;
+  --color-dot: #d4d7e0;
+  --color-surface: #ffffff;
+
+  /* Color — note (the single warm paper surface) */
+  --color-note-surface: #fdf6b2;
+  --color-note-border: #ece08a;
+
+  /* Color — ink */
+  --color-ink: #1f2937;
+  --color-ink-muted: #6b7280;
+
+  /* Color — accent (primary action) */
+  --color-accent: #4f46e5;
+  --color-accent-hover: #4338ca;
+  --color-on-accent: #ffffff;
+
+  /* Color — neutral control (secondary button) */
+  --color-control: #ffffff;
+  --color-control-border: #d1d5db;
+  --color-control-hover: #f9fafb;
+
+  /* Color — semantic */
+  --color-success-surface: #dcfce7;
+  --color-success-ink: #166534;
+  --color-danger: #dc2626;
+  --color-danger-surface: #fee2e2;
+  --color-danger-ink: #991b1b;
+
+  /* Focus ring — one shared indicator for every interactive element */
+  --focus-ring: #6366f1;
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+
+  /* Spacing scale */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+
+  /* Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* Type scale */
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --text-sm: 0.8125rem;
+  --text-base: 0.9375rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.5rem;
+
+  /* Elevation ramp (rest -> hover -> lifted drives the drag feel) */
+  --elevation-rest: 0 1px 2px rgba(17, 24, 39, 0.1), 0 1px 1px rgba(17, 24, 39, 0.06);
+  --elevation-hover: 0 6px 16px rgba(17, 24, 39, 0.14);
+  --elevation-lifted: 0 14px 28px rgba(17, 24, 39, 0.22);
+  --elevation-toolbar: 0 1px 0 rgba(17, 24, 39, 0.06), 0 2px 6px rgba(17, 24, 39, 0.05);
+  --elevation-dialog: 0 24px 48px rgba(17, 24, 39, 0.28);
+
+  /* Motion */
+  --motion-fast: 120ms;
+  --motion-base: 200ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Component dimensions */
+  --toolbar-height: 56px;
+  --note-width: 160px;
+  --note-min-height: 100px;
+  --dot-grid-size: 24px;
+  --dot-radius: 1.5px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}

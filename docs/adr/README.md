@@ -19,3 +19,4 @@ renumber or delete an accepted ADR — supersede it with a new one.
 |---|---|---|---|
 | [ADR-001](ADR-001-container-runtime.md) | Use Podman as the container runtime | Accepted | Script — `scripts/stage-deploy.sh` + `scripts/bootstrap.sh` (relates to ARCH-1) |
 | [ADR-002](ADR-002-single-deployable-unit.md) | Bundle the Angular SPA into the API as a single deployable unit | Accepted | Script — `scripts/stage-compile.sh` + `Program.cs` / `Dockerfile` (relates to ARCH-1) |
+| [ADR-003](ADR-003-design-token-mechanism.md) | Use CSS custom properties as the design-token mechanism | Accepted | Standard — ARCH-5 in `skills/arch-check` + `DesignTokenStandards.cs` |

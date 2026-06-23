@@ -1,39 +1,93 @@
 :host {
   position: absolute;
-  width: 160px;
-  min-height: 100px;
-  padding: 8px;
+  width: var(--note-width);
+  min-height: var(--note-min-height);
+  padding: var(--space-sm);
   box-sizing: border-box;
-  background: #fff8b0;
-  border: 1px solid #e0d97a;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  background: var(--color-note-surface);
+  border: 1px solid var(--color-note-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--elevation-rest);
   cursor: grab;
   user-select: none;
+  transition:
+    box-shadow var(--motion-fast) var(--ease-standard),
+    transform var(--motion-fast) var(--ease-standard);
+}
+
+/* Hover lift — signals the note is interactive/grabbable */
+:host(:hover) {
+  box-shadow: var(--elevation-hover);
+  transform: translateY(-1px);
+}
+
+/* Pressed/dragging — the "picked-up" feel */
+:host(:active) {
+  cursor: grabbing;
+  box-shadow: var(--elevation-lifted);
+  transform: scale(1.02);
+}
+
+/* Keyboard focus (e.g. while editing) */
+:host(:focus-within) {
+  outline: var(--focus-ring-width) solid var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
 }
 
 .note-body {
-  min-height: 64px;
   white-space: pre-wrap;
   word-break: break-word;
+  font-size: var(--text-base);
+  line-height: 1.4;
+  color: var(--color-ink);
 }
 
 .note-input {
   width: 100%;
-  height: 80px;
+  height: 5rem;
   border: none;
   background: transparent;
   resize: none;
   font: inherit;
+  color: var(--color-ink);
   outline: none;
 }
 
+/* Delete (×) — recessive at rest, clearly affordant on hover/focus */
 .note-delete {
   position: absolute;
-  top: 2px;
-  right: 4px;
+  top: var(--space-xs);
+  right: var(--space-xs);
+  display: grid;
+  place-items: center;
+  width: 1.25rem;
+  height: 1.25rem;
   border: none;
+  border-radius: var(--radius-sm);
   background: transparent;
-  font-size: 16px;
+  color: var(--color-ink-muted);
+  font-size: var(--text-lg);
   line-height: 1;
   cursor: pointer;
+  opacity: 0.35;
+  transition:
+    opacity var(--motion-fast) var(--ease-standard),
+    background var(--motion-fast) var(--ease-standard),
+    color var(--motion-fast) var(--ease-standard);
+}
+
+:host(:hover) .note-delete,
+:host(:focus-within) .note-delete {
+  opacity: 1;
+}
+
+.note-delete:hover {
+  background: var(--color-danger-surface);
+  color: var(--color-danger);
+}
+
+.note-delete:focus-visible {
+  opacity: 1;
+  outline: var(--focus-ring-width) solid var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
 }

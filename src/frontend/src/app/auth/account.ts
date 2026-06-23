@@ -9,6 +9,7 @@ import { AuthService } from './auth.service';
  */
 @Component({
   selector: 'app-account',
+  styleUrl: './auth.css',
   template: `
     <section data-testid="account-screen">
       <h1>Your account</h1>

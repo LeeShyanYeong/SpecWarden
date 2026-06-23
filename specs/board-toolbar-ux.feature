@@ -22,10 +22,14 @@
 # Open questions:
 #   - Where does the user land after signing out — the sign-in screen or a separate landing page?
 #     (Assumed sign-in screen, consistent with user-authentication.feature; confirm.)
-#   - Should the Save button reflect a dirty/clean state (e.g. greyed out when no changes)?
-#     (Not specified; deferred to a later UX polish story.)
 #   - What should the user see if the save request returns a server error (e.g. HTTP 500)?
 #     (Not specified; deferred — the unauthenticated-save redirect is already in private-user-boards.)
+#   - Save in-progress (busy) state: should Save show a busy/disabled look while a save is in
+#     flight? Needs a pending signal BoardStore does not expose yet — deferred (design/sticky-notes.md).
+#
+# Design decisions (from design/sticky-notes.md, the board's visual peer):
+#   - Save reflects clean/dirty: the Save button is DISABLED when the board has no unsaved
+#     changes and ENABLED once there are unsaved changes (resolves the prior open question).
 #
 # Architecture decisions: none — both ADRs (ADR-001 container runtime, ADR-002 single
 # deployable unit) are infrastructure decisions that do not constrain this feature's behaviour.
@@ -61,11 +65,31 @@ Feature: Board toolbar UX
 
   @component
   Scenario: Saving the board shows a transient success notification
-    Given a signed-in user is on the board with notes
+    Given a signed-in user is on the board with unsaved changes
     And the backend will accept the save
     When the user clicks "Save"
     Then a "Saved!" notification appears
     And the notification disappears automatically without user interaction
+
+  # ----- Save: clean/dirty state (from design/sticky-notes.md) -----
+
+  @component
+  Scenario: Save is disabled when the board has no unsaved changes
+    Given a signed-in user is on the board with no unsaved changes
+    Then the "Save" button is disabled
+
+  @component
+  Scenario: Save becomes enabled once the board has unsaved changes
+    Given a signed-in user is on the board with no unsaved changes
+    When the user makes a change to the board
+    Then the "Save" button is enabled
+
+  @component
+  Scenario: A successful save returns the board to a clean state
+    Given a signed-in user is on the board with unsaved changes
+    And the backend will accept the save
+    When the user clicks "Save"
+    Then the "Save" button is disabled
 
   # ----- Sign Out: no unsaved changes -----
 

@@ -6,7 +6,7 @@ description: >-
   "write the requirements", "what should this do?". Brainstorms with the user
   and persists a Cucumber-compatible spec to specs/<feature>.feature — it does
   NOT write code (use atdd-task / tdd-task).
-version: 1.2.0
+version: 1.3.0
 ---
 
 # Spec Task
@@ -25,6 +25,9 @@ units beneath). Capture *what* and *why* here; leave *how* and *steps* to the im
 ## Inputs
 
 - The idea to specify (a feature, change, or problem described in plain language).
+- *(Optional — UI-bearing features only)* a design brief at `design/<feature>.md` from
+  `design-task`: the authored intent for the layout and the per-element states. Read it when it
+  exists; most `@api`-only features have none — exactly as most features cite no ADR.
 
 ## Steps
 
@@ -39,9 +42,13 @@ units beneath). Capture *what* and *why* here; leave *how* and *steps* to the im
      finished file must contain **no** `@unspecified` scenario and must **not** say `# Status: Stub`
      — the **SPEC-1** guard (`tests/architecture/SpecHygieneStandards.cs`) fails the build until both
      are gone.
-2. **Brainstorm by asking, not assuming.** Ask focused questions until you can write testable
-   examples. Cover at least: actors/personas, the trigger, the happy path, edge cases, failure
-   modes, and what is explicitly **out of scope**. Stop asking once the scenarios are unambiguous.
+2. **Brainstorm by asking, not assuming — but read the design brief first.** If a
+   `design/<feature>.md` exists, read it before asking: it is the same class of upstream input as
+   the story and the ADRs, and it has already settled the UI's layout, its per-element states, and
+   several questions the story left open — do not re-ask those. Then ask focused questions until you
+   can write testable examples. Cover at least: actors/personas, the trigger, the happy path, edge
+   cases, failure modes, and what is explicitly **out of scope**. Stop asking once the scenarios are
+   unambiguous.
 3. **Write functional scenarios, tagged by level.** Use standard Gherkin `Given / When / Then / And`
    steps. Include the happy path, important edge cases, and at least one failure scenario (tag those
    `@failure`). Tag **every** scenario with the one level it is honestly verifiable at — this routes
@@ -55,6 +62,11 @@ units beneath). Capture *what* and *why* here; leave *how* and *steps* to the im
 
    A behaviour is only verifiable where its logic actually runs (e.g. arithmetic correctness belongs
    at `@api`, not against a stub). Each level uses its own honest vocabulary; keep steps declarative.
+
+   When a design brief is in play, turn each **observable** state it lists (what appears, shows,
+   hides, gains focus, or otherwise changes) into a `@component` scenario. Leave **look-only**
+   qualities (elevation, colour, spacing rhythm) to the design-system / `@visual` guards, not
+   Gherkin — a state you cannot assert without a screenshot does not belong in a behaviour scenario.
 4. **Write non-functional requirements as scenarios.** For each relevant quality attribute
    (performance, security, reliability, usability…), write:
    - an **EARS** statement in a `#` comment above the scenario — *"When `<trigger>`, the `<system>`
@@ -64,7 +76,9 @@ units beneath). Capture *what* and *why* here; leave *how* and *steps* to the im
      as open questions. `@nfr` scenarios can be excluded from the standard test run and wired to
      custom steps later.
 5. **Capture gaps and applicable decisions.** Record *Out of scope* items and *Open questions* as
-   `#` comments in the file header (these are not Gherkin and will not be parsed by the runner).
+   `#` comments in the file header (these are not Gherkin and will not be parsed by the runner) —
+   including any unresolved open questions carried over from the design brief, so they gate the spec
+   instead of being silently guessed.
    Then scan `docs/adr/` for any Architecture Decision Record that constrains this feature's
    **behaviour** — e.g. a chosen data format, concurrency model, or auth scheme. Cite each
    applicable ADR by id in an *Architecture decisions* header comment so the constraint rides along
@@ -134,6 +148,10 @@ Feature: <feature title>
   belongs to `brainstorm-task`. A spec this skill produces is always `# Status: Draft` with real,
   bound scenarios; the **SPEC-1** architecture guard enforces this.
 - `atdd-task` reads `specs/<feature>.feature` to implement its `@api` scenarios.
+- `design-task` writes `design/<feature>.md` as the visual peer of the story; this skill reads it
+  (when present) the same way it reads the story — intent in, level-tagged scenarios out. The brief
+  is **not** the contract: never copy its prose verbatim, and never let a look-only state become a
+  behaviour scenario.
 - Examples must be concrete and testable. "Fast", "secure", "scalable" are not requirements until
   they have a number or an observable condition.
 - One feature per file under `specs/`, mirroring how `TODO.md` holds one block per task.

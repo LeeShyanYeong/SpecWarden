@@ -11,6 +11,7 @@ import { AuthService, MIN_PASSWORD_LENGTH } from './auth.service';
 @Component({
   selector: 'app-sign-up',
   imports: [FormsModule, RouterLink],
+  styleUrl: './auth.css',
   template: `
     <section data-testid="sign-up-screen">
       <h1>Create your account</h1>

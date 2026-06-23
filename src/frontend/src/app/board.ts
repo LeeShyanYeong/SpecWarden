@@ -38,6 +38,10 @@ export class Board implements OnInit {
     void this.store.save();
   }
 
+  protected retry(): void {
+    void this.store.load();
+  }
+
   protected signOut(): void {
     if (this.store.isDirty()) {
       this.showSignOutDialog.set(true);

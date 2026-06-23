@@ -1,5 +1,5 @@
 <header class="toolbar">
-  <button type="button" data-testid="save" (click)="save()">Save</button>
+  <button type="button" data-testid="save" [disabled]="!store.isDirty()" (click)="save()">Save</button>
   <button type="button" data-testid="sign-out" (click)="signOut()">Sign Out</button>
   @if (store.savedToast()) {
     <span data-testid="saved-toast" role="status">Saved!</span>
@@ -18,8 +18,22 @@
   </div>
 }
 
+@if (store.loadError()) {
+  <div class="load-banner" role="alert" data-testid="load-error">
+    <span>The board could not be loaded.</span>
+    <button type="button" data-testid="retry-load" (click)="retry()">Retry</button>
+  </div>
+}
+
 <main class="canvas" data-testid="canvas" (dblclick)="onCanvasDblClick($event)">
   @for (note of store.notes(); track note.id) {
     <app-sticky-note [note]="note" />
+  }
+  @if (store.loaded() && store.notes().length === 0 && !store.loadError()) {
+    <div class="empty-state" data-testid="empty-board">
+      <div class="empty-state__icon" aria-hidden="true">🗒️</div>
+      <p class="empty-state__title">Your board is empty</p>
+      <p class="empty-state__hint">Double-click anywhere to add your first note</p>
+    </div>
   }
 </main>

@@ -77,6 +77,39 @@ describe('BoardStore', () => {
     expect(store.notes().map((n) => n.text)).toEqual(['Milk']);
   });
 
+  // ----- load lifecycle: loaded / loadError -----
+
+  it('loaded starts false and becomes true after a successful load()', async () => {
+    const store = makeStore({ load: async () => [] });
+    expect(store.loaded()).toBe(false);
+    await store.load();
+    expect(store.loaded()).toBe(true);
+  });
+
+  it('sets loadError and leaves the board blank when the load fails', async () => {
+    const store = makeStore({ load: async () => { throw new Error('down'); } });
+    await store.load();
+    expect(store.loadError()).toBe(true);
+    expect(store.loaded()).toBe(false);
+    expect(store.notes()).toHaveLength(0);
+  });
+
+  it('clears loadError when a retry load succeeds', async () => {
+    let fail = true;
+    const store = makeStore({
+      load: async () => {
+        if (fail) throw new Error('down');
+        return [{ id: '1', text: 'Milk', x: 0, y: 0, z: 1 }] as Note[];
+      },
+    });
+    await store.load();
+    expect(store.loadError()).toBe(true);
+    fail = false;
+    await store.load();
+    expect(store.loadError()).toBe(false);
+    expect(store.notes().map((n) => n.text)).toEqual(['Milk']);
+  });
+
   it('clears any error after a successful save', async () => {
     const store = makeStore({ save: async () => {} });
     store.create(0, 0);

@@ -1,6 +1,8 @@
 # Status: Draft | Author: LeeShyanYeong | Created: 2026-06-20
 #
 # Source story: stories/sticky-notes.md
+# Design brief: design/sticky-notes.md (visual peer — empty / loading / load-failure
+#   states + the empty-note accessible name asserted below)
 #
 # Level routing for this slice:
 #   Persistence makes this full-stack, so unlike the earlier session-only slice it
@@ -22,19 +24,22 @@
 #   - Changing note colour or size, rich text / formatting, images, attachments.
 #   - Kanban columns, tags, search, filtering, ordering; any limit on note count.
 #
+# Resolved since drafting (by design/sticky-notes.md):
+#   - Empty-board state: a loaded, note-less board shows a "Your board is empty" headline
+#     and a hint to double-click to add the first note; during the first load nothing is
+#     shown (no empty-state flash). See the board-data-state scenarios below.
+#   - Load failure on open: the canvas stays blank and a banner with a Retry action is
+#     shown; Retry re-attempts the load. (Previously only SAVE failure was decided.)
+#   - Save success feedback: a "Saved!" toast — owned by specs/board-toolbar-ux.feature.
+#
 # Open questions:
-#   - Save success feedback: does a successful Save show a "Saved" confirmation, or
-#     stay silent? (Failure is surfaced; success feedback is not pinned, so no
-#     scenario asserts it.)
-#   - Load failure: what the user sees if the load on open fails (server down at
-#     startup) — error + empty board, retry, a banner? Only SAVE failure is decided.
-#   - Empty-board state: what the canvas shows when there are no notes, including
-#     before the first load completes.
 #   - Save/load latency: no measurable target agreed, so no @nfr is asserted.
 #   - Paste at the cap: trim-to-fit vs reject-whole when a paste would exceed 500
 #     (only "never exceeds 500" is fixed).
-#   - Max-length feedback: whether a character counter is shown (input is blocked
-#     either way).
+#   - Max-length feedback: whether a character counter is shown as text nears 500, and at
+#     what threshold (input is blocked either way; not asserted this pass).
+#   - Keyboard-only create & drag: creation is double-click and drag is pointer-based, so a
+#     keyboard-only user cannot yet add or reposition a note — deferred to a later a11y story.
 
 Feature: Sticky notes on a freeform board with server persistence
   As a person capturing and arranging quick notes
@@ -132,6 +137,13 @@ Feature: Sticky notes on a freeform board with server persistence
     Then the note is shown at position (400, 250)
 
   @component
+  Scenario: A newly created note can be dragged without editing it first
+    Given the sticky-note board is open with no notes
+    When the user double-clicks an empty area of the canvas at position (120, 80)
+    And the user drags the note to position (300, 200)
+    Then the note is shown at position (300, 200)
+
+  @component
   Scenario: Deleting a note removes it immediately without confirmation
     Given a note exists on the board
     When the user clicks the note's delete button
@@ -145,15 +157,27 @@ Feature: Sticky notes on a freeform board with server persistence
     Then the empty note remains on the board
 
   @component
+  Scenario: An empty note still has an accessible name
+    Given the user creates a note by double-clicking the canvas
+    And the user leaves the note without entering any text
+    Then the empty note exposes the accessible name "Empty note"
+
+  @component
   Scenario: Multiple notes coexist on the board
     Given the sticky-note board is open with no notes
     When the user creates three notes at different positions
     Then all three notes are visible on the board
 
   @component
-  Scenario: Interacting with a note raises it above overlapping notes
+  Scenario: Dragging a note raises it above overlapping notes
     Given two notes overlap, with note "B" rendered in front of note "A"
     When the user drags note "A"
+    Then note "A" is rendered in front of note "B"
+
+  @component
+  Scenario: Editing a note raises it above overlapping notes
+    Given two notes overlap, with note "B" rendered in front of note "A"
+    When the user double-clicks note "A" to edit it
     Then note "A" is rendered in front of note "B"
 
   @component
@@ -168,3 +192,35 @@ Feature: Sticky notes on a freeform board with server persistence
     When the user attempts to type or paste further characters
     Then the further input is rejected
     And the note's text remains exactly 500 characters
+
+  # ----- Board data states: loading, empty, load failure (@component) -----
+
+  @component
+  Scenario: An empty board shows a hint to create the first note
+    Given the server has a saved board with no notes
+    When the user opens the app
+    Then the board shows the message "Your board is empty"
+    And a hint invites the user to double-click anywhere to add the first note
+
+  @component
+  Scenario: The empty-board hint is not shown while the board is still loading
+    Given the saved board has not yet finished loading
+    When the user opens the app
+    Then no notes are shown on the board
+    And the empty-board hint is not shown
+
+  @component @failure
+  Scenario: A board that fails to load shows a retry banner over a blank canvas
+    Given loading the saved board will fail
+    When the user opens the app
+    Then a banner states the board could not be loaded
+    And the banner offers a Retry action
+    And the canvas remains blank
+
+  @component
+  Scenario: Retrying after a failed load renders the saved board
+    Given the saved board contains notes "Milk" and "Eggs"
+    And the first load failed and the retry banner is shown
+    When the user clicks Retry and the load succeeds
+    Then notes "Milk" and "Eggs" are shown on the board
+    And the load-failure banner is no longer shown

@@ -19,6 +19,14 @@ export class BoardStore {
   private readonly _error = signal<string | null>(null);
   readonly error = this._error.asReadonly();
 
+  /** True once the first load has resolved successfully — gates the empty-board hint. */
+  private readonly _loaded = signal(false);
+  readonly loaded = this._loaded.asReadonly();
+
+  /** True when loading the board on open (or retry) failed — drives the retry banner. */
+  private readonly _loadError = signal(false);
+  readonly loadError = this._loadError.asReadonly();
+
   private readonly _editingId = signal<string | null>(null);
   readonly editingId = this._editingId.asReadonly();
 
@@ -34,11 +42,19 @@ export class BoardStore {
   constructor(private readonly api: BoardApi) {}
 
   async load(): Promise<void> {
-    const notes = await this.api.load();
-    this._notes.set(notes);
-    this._editingId.set(null);
-    this._isDirty.set(false);
-    this.nextZ = notes.reduce((max, n) => Math.max(max, n.z), 0) + 1;
+    this._loadError.set(false);
+    try {
+      const notes = await this.api.load();
+      this._notes.set(notes);
+      this._editingId.set(null);
+      this._isDirty.set(false);
+      this._loaded.set(true);
+      this.nextZ = notes.reduce((max, n) => Math.max(max, n.z), 0) + 1;
+    } catch {
+      // The board could not be fetched (server down at startup, network error).
+      // Surface a retry banner; leave the canvas blank and the local state untouched.
+      this._loadError.set(true);
+    }
   }
 
   async save(): Promise<void> {

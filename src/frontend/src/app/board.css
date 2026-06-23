@@ -3,25 +3,200 @@
   height: 100vh;
 }
 
+/* ----- Toolbar ----- */
+
 .toolbar {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  height: 48px;
-  padding: 0 1rem;
-  background: #f5f5f5;
-  border-bottom: 1px solid #ddd;
+  gap: var(--space-sm);
+  height: var(--toolbar-height);
+  padding: 0 var(--space-md);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-control-border);
+  box-shadow: var(--elevation-toolbar);
   box-sizing: border-box;
 }
 
-.error {
-  color: #b00020;
+.toolbar button {
+  font: inherit;
+  font-weight: 600;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition:
+    background var(--motion-fast) var(--ease-standard),
+    box-shadow var(--motion-fast) var(--ease-standard);
 }
+
+/* Save = primary accent; recedes to a quiet, disabled look when clean */
+.toolbar button[data-testid="save"] {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+
+.toolbar button[data-testid="save"]:hover {
+  background: var(--color-accent-hover);
+}
+
+.toolbar button[data-testid="save"]:disabled {
+  background: var(--color-control);
+  color: var(--color-ink-muted);
+  border-color: var(--color-control-border);
+  cursor: default;
+}
+
+/* Sign Out = secondary outline */
+.toolbar button[data-testid="sign-out"] {
+  background: var(--color-control);
+  color: var(--color-ink);
+  border-color: var(--color-control-border);
+}
+
+.toolbar button[data-testid="sign-out"]:hover {
+  background: var(--color-control-hover);
+}
+
+.toolbar button:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
+/* Transient feedback, pushed to the trailing edge so it never covers notes */
+.toolbar [data-testid="saved-toast"] {
+  margin-left: auto;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  background: var(--color-success-surface);
+  color: var(--color-success-ink);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.error {
+  margin-left: auto;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  background: var(--color-danger-surface);
+  color: var(--color-danger-ink);
+  font-size: var(--text-sm);
+}
+
+/* ----- Unsaved-changes dialog ----- */
+
+[data-testid="unsaved-dialog"] {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  width: 22rem;
+  max-width: 90vw;
+  padding: var(--space-lg);
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--elevation-dialog);
+}
+
+[data-testid="unsaved-dialog"] p {
+  margin: 0 0 var(--space-xs);
+  font-size: var(--text-base);
+}
+
+[data-testid="unsaved-dialog"] button {
+  font: inherit;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-control-border);
+  background: var(--color-control);
+  cursor: pointer;
+}
+
+[data-testid="unsaved-dialog"] button[data-testid="save-and-sign-out"] {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  border-color: transparent;
+}
+
+[data-testid="unsaved-dialog"] button:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
+/* ----- Load-failure banner (below the toolbar, over a blank canvas) ----- */
+
+.load-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-danger-surface);
+  color: var(--color-danger-ink);
+  font-size: var(--text-sm);
+}
+
+.load-banner button {
+  font: inherit;
+  font-weight: 600;
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-danger);
+  background: transparent;
+  color: var(--color-danger-ink);
+  cursor: pointer;
+}
+
+.load-banner button:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
+/* ----- Empty-board state (centered hint; never intercepts the canvas dblclick) ----- */
+
+.empty-state {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  text-align: center;
+  color: var(--color-ink-muted);
+  pointer-events: none;
+  user-select: none;
+}
+
+.empty-state__icon {
+  font-size: var(--text-xl);
+  opacity: 0.7;
+}
+
+.empty-state__title {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.empty-state__hint {
+  margin: 0;
+  font-size: var(--text-base);
+}
+
+/* ----- Canvas (freeform, dot-grid surface) ----- */
 
 .canvas {
   position: relative;
   width: 100%;
-  height: calc(100vh - 48px);
-  background: #fafafa;
+  height: calc(100vh - var(--toolbar-height));
+  background-color: var(--color-canvas);
+  background-image: radial-gradient(var(--color-dot) var(--dot-radius), transparent var(--dot-radius));
+  background-size: var(--dot-grid-size) var(--dot-grid-size);
   overflow: hidden;
 }

@@ -68,6 +68,20 @@ Then(/^the notification disappears automatically without user interaction$/, asy
   await expect(board.savedToast).toBeHidden({ timeout: 5000 });
 });
 
+// ----- Save: clean/dirty state (@component) -----
+
+Then(/^the "Save" button is disabled$/, async ({ page }) => {
+  await expect(page.getByTestId('save')).toBeDisabled();
+});
+
+Then(/^the "Save" button is enabled$/, async ({ page }) => {
+  await expect(page.getByTestId('save')).toBeEnabled();
+});
+
+When(/^the user makes a change to the board$/, async ({ board }) => {
+  await board.makeChange();
+});
+
 // ----- Sign Out: no unsaved changes (@component) -----
 
 Given(/^a signed-in user is on the board with no unsaved changes$/, async ({ board }) => {

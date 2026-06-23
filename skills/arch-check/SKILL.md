@@ -6,7 +6,7 @@ description: >-
   our architecture?", "arch check", "are the standards met?", and as part of
   tdd-task (during refactor) and code-review. Holds the standing list of
   architecture rules and how to apply them.
-version: 1.1.0
+version: 1.2.0
 ---
 
 # Architecture Check
@@ -24,10 +24,11 @@ The mechanically-checkable parts of these standards are enforced as tests in
 build — the same guarantee the Reqnroll/Playwright lanes give for behaviour.
 
 - The enforced standards each map to a `[Fact]`: ARCH-1/2/3 are filesystem /
-  project-shape checks (`StructuralStandards.cs`), and the spec-lifecycle guard
-  SPEC-1 (no spec left a stub) lives in `SpecHygieneStandards.cs`. These are plain
-  filesystem and text checks — there is **no** assembly/dependency analysis today
-  (no ArchUnitNET; if that's ever added, update this section and the README/docs).
+  project-shape checks (`StructuralStandards.cs`), the spec-lifecycle guard
+  SPEC-1 (no spec left a stub) lives in `SpecHygieneStandards.cs`, and ARCH-5
+  (frontend styles use design tokens) is a CSS text scan in `DesignTokenStandards.cs`.
+  These are plain filesystem and text checks — there is **no** assembly/dependency
+  analysis today (no ArchUnitNET; if that's ever added, update this section and the README/docs).
 - **ARCH-4 is not enforced by a test.** It is entirely judgment-based and stays a
   manual concern in the Steps below — there is no `[Fact]` for it.
 - This file stays the **rationale and index** (the *why*); the test project is
@@ -99,8 +100,22 @@ Each rule has an **id**, the **rule**, and a **check** (how to confirm it holds)
   delegate to services, dependencies arrive via constructor injection, and there
   is no obvious duplication.
 
+### ARCH-5 — Frontend styles consume design tokens
+
+- **Rule:** Component stylesheets express visual values through design tokens, not raw
+  literals. Colours and `px` lengths are defined once as CSS custom properties on `:root`
+  in `src/frontend/src/styles.css` and referenced with `var(--token)`; no component `.css`
+  hardcodes a hex colour or a `px` length (hairline `1px` borders excepted).
+- **Check:** `DesignTokenStandards.cs` scans `src/frontend/src/**/*.css` (excluding the
+  `styles.css` token file) and fails on any raw hex colour or `px` length, reporting the
+  offending `file:line`. Dormant until `src/frontend` exists.
+- **Rationale:** The token mechanism is chosen in
+  [ADR-003](../../docs/adr/ADR-003-design-token-mechanism.md) (CSS custom properties); this
+  standard is its enforcement. Accessibility is **not** part of ARCH-5 — it is runtime truth
+  carried by `@component` scenarios, not a static scan.
+
 <!--
-Add new standards below as ARCH-5, ARCH-6, … Keep each one in the same shape:
+Add new standards below as ARCH-6, ARCH-7, … Keep each one in the same shape:
 a one-line Rule and a concrete, observable Check. The more checkable the Check,
 the easier it later becomes a hook (see Notes). If the standard codifies an ADR
 decision, add a **Rationale** line linking the ADR and set that ADR's Enforcement

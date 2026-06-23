@@ -11,6 +11,7 @@ import { AuthService } from './auth.service';
 @Component({
   selector: 'app-sign-in',
   imports: [FormsModule, RouterLink],
+  styleUrl: './auth.css',
   template: `
     <section data-testid="sign-in-screen">
       <h1>Sign in</h1>
